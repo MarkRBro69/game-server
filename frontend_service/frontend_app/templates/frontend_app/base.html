@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'frontend_app/css/style.css' %}">
+    <link rel="icon" href="{% static 'frontend_app/favicon.ico' %}" type="image/x-icon">
+</head>
+<body>
+{% block content %}
+{% endblock %}
+</body>
+</html>
