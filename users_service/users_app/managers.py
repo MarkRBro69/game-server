@@ -44,7 +44,7 @@ class CustomUserManager(BaseUserManager):
         # Extract individual fields from the input dictionary
         username = user_data.get('username')
         email = user_data.get('email')
-        password = user_data.get('password')
+        password = user_data.get('password1')
 
         # Normalize email to ensure consistent storage
         normalized_email = self.normalize_email(email)

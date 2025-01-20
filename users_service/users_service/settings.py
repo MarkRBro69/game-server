@@ -1,20 +1,21 @@
 import environ
 
+from datetime import timedelta
 from pathlib import Path
 
 import config
 
 env = environ.Env()
-env.read_env(r"C:\Users\ADMIN\Desktop\PyCharmProjects\django_projects\game_server\.env")
+env.read_env(config.ENV_PATH)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g--w9^&^qd0r_bstkyz4h1dqn@3ob&scm*7)%#rya@%4!s$ehd'
+SECRET_KEY = env('USERS_SERVICE_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG')
 
 ALLOWED_HOSTS = ['127.0.0.2']
 
@@ -29,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'rest_framework_simplejwt',
 
     'users_app.apps.UsersAppConfig'
 ]
@@ -122,3 +124,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 LOGGING = config.LOGGING
+
+AUTH_USER_MODEL = 'users_app.CustomUserModel'
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}

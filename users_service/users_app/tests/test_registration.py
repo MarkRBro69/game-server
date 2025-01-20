@@ -47,6 +47,7 @@ class UserRegistrationTestCase(APITestCase):
             # Verify that the user exists in the database
             user = CustomUserModel.objects.get(username='testuser')  # Look up the user by username
             self.assertEqual(user.email, 'test@example.com')  # Check that the email is correct
+            self.assertTrue(user.check_password('Qecz1357'))  # Check that password hashed correctly
 
     def test_register_user_empty_data(self):
         """

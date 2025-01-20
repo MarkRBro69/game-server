@@ -1,0 +1,114 @@
+{% extends 'frontend_app/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Global Chat</h1>
+    <div class="chat-container">
+        <div class="chat-box">
+            <h2>Welcome, {{ user.username }}</h2>
+            <div id="chat-log" class="chat-log"></div>
+            <input id="chat-message-input" class="chat-input" type="text" placeholder="Type a message..." size="100">
+            <button id="chat-message-submit" class="chat-submit">Send</button>
+        </div>
+
+        <div class="users-list">
+            <h3>Connected Users</h3>
+            <ul id="users-list">
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id="invite-modal">
+    <p id="invite-message">You have been invited to the game</p>
+    <button id="invite-accept">Accept</button>
+    <button id="invite-decline">Decline</button>
+</div>
+<div id="modal-overlay"></div>
+
+
+<script>
+    const username = '{{ user.username|escapejs }}';
+    const chatSocket = new WebSocket(`ws://127.0.0.3:8003/ws/global/${username}/`);
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        console.log(data)
+        if (data.event_type === '/new_user') {
+            updateUsersList(data.users);
+        } else if (data.event_type === '/invite') {
+            showInviteModal(data.target_url, data.message);
+        } else {
+            const chatLog = document.getElementById('chat-log');
+            chatLog.innerHTML += '<b>' + data.timestamp + '</b>: ' + data.username + ' - ' + data.message + '<br>';
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.getElementById('chat-message-submit').onclick = function(e) {
+        sendMessage();
+    };
+
+    document.getElementById('chat-message-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    function sendMessage() {
+        const messageInputDom = document.getElementById('chat-message-input');
+        const message = messageInputDom.value;
+
+        chatSocket.send(JSON.stringify({
+            'message': message,
+            'username': username,
+        }));
+
+        messageInputDom.value = '';
+    }
+
+    function updateUsersList(users) {
+        const usersList = document.getElementById('users-list');
+        usersList.innerHTML = '';
+
+        users.forEach(user => {
+            const li = document.createElement('li');
+            li.textContent = user;
+            usersList.appendChild(li);
+        });
+    }
+
+    function showInviteModal(targetUrl, message) {
+        const modal = document.getElementById('invite-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const inviteMessage = document.getElementById('invite-message');
+
+        inviteMessage.textContent = message;
+
+        modal.style.display = 'block';
+        overlay.style.display = 'block';
+
+        document.getElementById('invite-accept').onclick = function() {
+            window.location.href = `${window.location.origin}${targetUrl}`;
+        };
+
+        document.getElementById('invite-decline').onclick = function() {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        };
+
+        overlay.onclick = function() {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        };
+    }
+</script>
+
+
+{% endblock %}

@@ -1,10 +1,15 @@
 import logging
 
+from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from users_app.models import CustomUserModel
+from users_app.serializers import CustomUserSerializer
 from users_app.services import UserService
 
 logger = logging.getLogger('game_server')
@@ -46,6 +51,33 @@ def register_user(request):
 
     except Exception as e:
         # Handle unexpected errors
-        data = {'message': 'An unexpected error occurred. Please try again later.'}
+        data = {'errors': 'An unexpected error occurred. Please try again later.'}
         logger.exception(f'Unexpected error occurred: {e}')
         return Response(data=data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    user = authenticate(username=username, password=password)
+    if user:
+        tokens = RefreshToken.for_user(user)
+        data = {
+            'access': str(tokens.access_token),
+            'refresh': str(tokens),
+            'user': CustomUserSerializer(user).data,
+        }
+
+        return Response(data=data, status=status.HTTP_200_OK)
+
+    return Response(data={'error': 'an error'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def delete_user(request, username):
+    user = get_object_or_404(CustomUserModel, username=username)
+    data = {'user deleted': user.id}
+    user.delete()
+    return Response(data=data, status=status.HTTP_204_NO_CONTENT)
+
