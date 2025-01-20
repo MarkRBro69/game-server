@@ -17,10 +17,13 @@ class CustomUserModel(AbstractBaseUser):
     """
 
     # The username field for the user (must be unique)
-    username = models.CharField(max_length=32, unique=True)
+    username = models.CharField(max_length=32, unique=True, blank=False, null=False)
 
     # The email field for the user (must be unique)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank=False, null=False)
+
+    # Password field
+    password = models.CharField(max_length=128, blank=False, null=False)
 
     # Flag to mark whether the user is active
     is_active = models.BooleanField(default=True)

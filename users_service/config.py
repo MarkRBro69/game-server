@@ -1,3 +1,10 @@
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+file_path = os.path.join(parent_dir, '.env')
+
+ENV_PATH = file_path
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

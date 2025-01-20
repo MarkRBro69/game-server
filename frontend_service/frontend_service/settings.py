@@ -1,15 +1,21 @@
+import environ
+
 from pathlib import Path
 
 import config
+
+env = environ.Env()
+env.read_env(config.ENV_PATH)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--@q0vcm)yxln_5=&0q5cw@3-lp6p8#&sh752-!rq*k@mh96+un'
+SECRET_KEY = env('FRONTEND_SERVICE_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG')
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
@@ -112,3 +118,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 LOGGING = config.LOGGING
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}

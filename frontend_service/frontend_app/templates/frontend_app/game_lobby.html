@@ -1,0 +1,133 @@
+{% extends 'frontend_app/base.html' %}
+
+{% block content %}
+<div>
+    <h1>Fight</h1>
+    <div id="timer">Time: 5</div>
+    <button id="btn-ready" onclick="sendMove('ready')">Ready</button>
+    <button id="btn-attack" onclick="sendMove('attack')">Attack</button>
+    <button id="btn-defend" onclick="sendMove('defend')">Defend</button>
+    <button id="btn-feint" onclick="sendMove('feint')">Feint</button>
+    <button id="btn-rest" onclick="sendMove('rest')">Rest</button>
+    <button id="btn-pass" onclick="sendMove('pass')">Pass</button>
+</div>
+
+<div class="container">
+    <h1>Game State</h1>
+    <div id="game-state">
+        <div class="players">
+            <div class="section">
+                <h2>Player 1</h2>
+                <p><strong>Username:</strong> <span id="p1-username">-</span></p>
+                <p><strong>Health:</strong> <span id="p1-health">-</span></p>
+                <p><strong>Energy:</strong> <span id="p1-energy">-</span></p>
+                <p><strong>Available Actions:</strong> <span id="p1-actions">-</span></p>
+            </div>
+            <div class="section">
+                <h2>Player 2</h2>
+                <p><strong>Username:</strong> <span id="p2-username">-</span></p>
+                <p><strong>Health:</strong> <span id="p2-health">-</span></p>
+                <p><strong>Energy:</strong> <span id="p2-energy">-</span></p>
+                <p><strong>Available Actions:</strong> <span id="p2-actions">-</span></p>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Message</h2>
+            <p id="game-message">-</p>
+        </div>
+    </div>
+    <p class="error" id="error-message"></p>
+</div>
+
+<script>
+    const username = '{{ user.username|escapejs }}';
+    const room_token = '{{ room_token|escapejs }}';
+    const socket = new WebSocket(`ws://127.0.0.3:8003/ws/game/${room_token}/${username}/`);
+
+    const p1Username = document.getElementById('p1-username');
+    const p1Health = document.getElementById('p1-health');
+    const p1Energy = document.getElementById('p1-energy');
+    const p1Actions = document.getElementById('p1-actions');
+
+    const p2Username = document.getElementById('p2-username');
+    const p2Health = document.getElementById('p2-health');
+    const p2Energy = document.getElementById('p2-energy');
+    const p2Actions = document.getElementById('p2-actions');
+
+    const gameMessage = document.getElementById('game-message');
+    const errorMessage = document.getElementById('error-message');
+
+    socket.onopen = function() {
+        console.log('WebSocket connection established.');
+    };
+
+        socket.onmessage = (event) => {
+            console.log(event.data);
+
+            try {
+                const data = JSON.parse(event.data);
+
+                p1Username.textContent = data.p1_username;
+                p1Health.textContent = data.p1_health;
+                p1Energy.textContent = data.p1_energy;
+                p1Actions.textContent = data.p1_available_actions;
+
+                p2Username.textContent = data.p2_username;
+                p2Health.textContent = data.p2_health;
+                p2Energy.textContent = data.p2_energy;
+                p2Actions.textContent = data.p2_available_actions;
+
+                gameMessage.textContent = data.message;
+
+                if (username === data.p1_username) {
+                    updateButtons(data.p1_available_actions || '');
+               } else {
+                  updateButtons(data.p2_available_actions || '');
+               }
+
+            } catch (err) {
+                errorMessage.textContent = 'Error processing data: ' + err.message;
+            }
+        };
+
+    socket.onerror = function(error) {
+        console.error('WebSocket Error:', error);
+    };
+
+    socket.onclose = function() {
+        console.log('WebSocket connection closed.');
+    };
+
+    function sendMove(choice) {
+        socket.send(JSON.stringify({
+            action: 'make_move',
+            player: username,
+            choice: choice,
+        }));
+    }
+
+    function updateButtons(availableActions) {
+        availableActions = availableActions.split(',');
+
+        const buttons = {
+            ready: document.getElementById('btn-ready'),
+            attack: document.getElementById('btn-attack'),
+            defend: document.getElementById('btn-defend'),
+            feint: document.getElementById('btn-feint'),
+            rest: document.getElementById('btn-rest'),
+            pass: document.getElementById('btn-pass'),
+        };
+
+        for (const key in buttons) {
+            buttons[key].disabled = true;
+        }
+
+        availableActions.forEach(action => {
+            if (buttons[action]) {
+                buttons[action].disabled = false;
+            }
+        });
+    }
+
+</script>
+{% endblock %}
