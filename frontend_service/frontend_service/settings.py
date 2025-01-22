@@ -124,13 +124,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGGING = config.LOGGING
 
+REDIS_USERNAME = env('REDIS_USERNAME')
+REDIS_PASSWORD = env('REDIS_PASSWORD')
 REDIS_HOST = env('REDIS_HOST')
 REDIS_PORT = env('REDIS_PORT')
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
+        'LOCATION': f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }

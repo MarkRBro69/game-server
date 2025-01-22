@@ -102,6 +102,8 @@ LOGGING = config.LOGGING
 
 ASGI_APPLICATION = "game_service.asgi.application"
 
+REDIS_USERNAME = env('REDIS_USERNAME')
+REDIS_PASSWORD = env('REDIS_PASSWORD')
 REDIS_HOST = env('REDIS_HOST')
 REDIS_PORT = env('REDIS_PORT')
 
@@ -109,7 +111,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
+            "hosts": [f"redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1"],
         },
     },
 }
