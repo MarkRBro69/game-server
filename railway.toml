@@ -4,15 +4,28 @@
   builder = "DOCKERFILE"
   dockerfilePath = "./frontend_service/Dockerfile"
 
+  [services.frontend.deploy]
+  start = "python /app/manage.py runserver 0.0.0.0:8001"
+
   [[services.users]]
   name = "users"
   builder = "DOCKERFILE"
   dockerfilePath = "./users_service/Dockerfile"
 
+  [services.users.deploy]
+  start = """
+  python /app/manage.py makemigrations &&
+  python /app/manage.py migrate &&
+  python /app/manage.py runserver 0.0.0.0:8002
+  """
+
   [[services.game]]
   name = "game"
   builder = "DOCKERFILE"
-  dockerfilePath = "./users_service/Dockerfile"
+  dockerfilePath = "./game_service/Dockerfile"
+
+  [services.game.deploy]
+  start = "uvicorn game_service.asgi:application --host 0.0.0.0 --port 8003"
 
 [deploy]
   healthCheck = "/ping"
