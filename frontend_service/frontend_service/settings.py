@@ -140,3 +140,7 @@ CACHES = {
 CORS_ALLOWED_ORIGINS = [
     "https://frontend-production-df30.up.railway.app",
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://frontend-production-df30.up.railway.app',
+]
