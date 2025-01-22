@@ -16,7 +16,7 @@ SECRET_KEY = env('GAME_SERVICE_SECRET_KEY')
 
 DEBUG = env.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.3', 'game']
+ALLOWED_HOSTS = ['127.0.0.3', 'game', 'game-production-2d31.up.railway.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

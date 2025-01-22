@@ -19,7 +19,7 @@ SECRET_KEY = env('FRONTEND_SERVICE_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'frontend']
+ALLOWED_HOSTS = ['127.0.0.1', 'frontend', 'frontend-production-df30.up.railway.app']
 
 
 # Application definition

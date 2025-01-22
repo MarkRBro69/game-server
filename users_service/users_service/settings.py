@@ -20,7 +20,7 @@ SECRET_KEY = env('USERS_SERVICE_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.2', 'users']
+ALLOWED_HOSTS = ['127.0.0.2', 'users', 'users-production-52dd.up.railway.app']
 
 # Application definition
 
