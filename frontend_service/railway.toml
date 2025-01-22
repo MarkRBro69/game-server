@@ -1,6 +1,18 @@
-[build]
+[services]
+  [[services.frontend]]
+  name = "frontend"
   builder = "DOCKERFILE"
   dockerfilePath = "./frontend_service/Dockerfile"
+
+  [[services.users]]
+  name = "users"
+  builder = "DOCKERFILE"
+  dockerfilePath = "./users_service/Dockerfile"
+
+  [[services.game]]
+  name = "game"
+  builder = "DOCKERFILE"
+  dockerfilePath = "./users_service/Dockerfile"
 
 [deploy]
   healthCheck = "/ping"
