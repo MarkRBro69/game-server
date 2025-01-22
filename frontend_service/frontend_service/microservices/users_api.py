@@ -17,7 +17,7 @@ USERS_LOGIN = 'login/'
 USERS_API = ''.join([
     USERS_SERVICE_PROTOCOL,
     USERS_SERVICE_HOST,
-    ':',
+
     USERS_SERVICE_PORT,
     '/',
     USERS_SERVICE_PREFIX,

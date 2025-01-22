@@ -18,7 +18,7 @@ GAME_LOBBY = 'game/'
 GAME_API = ''.join([
     GAME_SERVICE_PROTOCOL,
     GAME_SERVICE_HOST,
-    ':',
+
     GAME_SERVICE_PORT,
     '/',
     GAME_SERVICE_PREFIX,
