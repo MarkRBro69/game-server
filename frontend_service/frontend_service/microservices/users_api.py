@@ -4,7 +4,7 @@ import config
 env = environ.Env()
 env.read_env(config.ENV_PATH)
 
-USERS_SERVICE_PROTOCOL = 'http://'
+USERS_SERVICE_PROTOCOL = 'https://'
 USERS_SERVICE_HOST = env('USERS_SERVICE_HOST')
 USERS_SERVICE_PORT = env('USERS_SERVICE_PORT')
 

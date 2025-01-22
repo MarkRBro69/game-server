@@ -4,7 +4,7 @@ import config
 env = environ.Env()
 env.read_env(config.ENV_PATH)
 
-GAME_SERVICE_PROTOCOL = 'http://'
+GAME_SERVICE_PROTOCOL = 'https://'
 GAME_SERVICE_HOST = env('GAME_SERVICE_HOST')
 GAME_SERVICE_PORT = env('GAME_SERVICE_PORT')
 
