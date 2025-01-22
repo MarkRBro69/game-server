@@ -1,5 +1,7 @@
 {% extends 'frontend_app/base.html' %}
 
+{% load static %}
+
 {% block content %}
 <div>
     <h1>Fight</h1>
@@ -39,6 +41,12 @@
     <p class="error" id="error-message"></p>
 </div>
 
+<div class="arena">
+    <img src="{% static 'frontend_app/png/stickman.png' %}" alt="Stickman 1" class="stickman stickman-left">
+    <img src="{% static 'frontend_app/png/stickman.png' %}" alt="Stickman 2" class="stickman stickman-right">
+</div>
+
+
 <script>
     const username = '{{ user.username|escapejs }}';
     const room_token = '{{ room_token|escapejs }}';
@@ -61,34 +69,34 @@
         console.log('WebSocket connection established.');
     };
 
-        socket.onmessage = (event) => {
-            console.log(event.data);
+    socket.onmessage = (event) => {
+        console.log(event.data);
 
-            try {
-                const data = JSON.parse(event.data);
+        try {
+            const data = JSON.parse(event.data);
 
-                p1Username.textContent = data.p1_username;
-                p1Health.textContent = data.p1_health;
-                p1Energy.textContent = data.p1_energy;
-                p1Actions.textContent = data.p1_available_actions;
+            p1Username.textContent = data.p1_username;
+            p1Health.textContent = data.p1_health;
+            p1Energy.textContent = data.p1_energy;
+            p1Actions.textContent = data.p1_available_actions;
 
-                p2Username.textContent = data.p2_username;
-                p2Health.textContent = data.p2_health;
-                p2Energy.textContent = data.p2_energy;
-                p2Actions.textContent = data.p2_available_actions;
+            p2Username.textContent = data.p2_username;
+            p2Health.textContent = data.p2_health;
+            p2Energy.textContent = data.p2_energy;
+            p2Actions.textContent = data.p2_available_actions;
 
-                gameMessage.textContent = data.message;
+            gameMessage.textContent = data.message;
 
-                if (username === data.p1_username) {
-                    updateButtons(data.p1_available_actions || '');
-               } else {
-                  updateButtons(data.p2_available_actions || '');
-               }
+            if (username === data.p1_username) {
+                updateButtons(data.p1_available_actions || '');
+           } else {
+              updateButtons(data.p2_available_actions || '');
+           }
 
-            } catch (err) {
-                errorMessage.textContent = 'Error processing data: ' + err.message;
-            }
-        };
+        } catch (err) {
+            errorMessage.textContent = 'Error processing data: ' + err.message;
+        }
+    };
 
     socket.onerror = function(error) {
         console.error('WebSocket Error:', error);
@@ -104,6 +112,11 @@
             player: username,
             choice: choice,
         }));
+
+        if (choice === 'attack') {
+            const attacker = username === 'Mark' ? 'stickman1' : 'stickman2';
+            attack(attacker);
+        }
     }
 
     function updateButtons(availableActions) {
@@ -127,6 +140,27 @@
                 buttons[action].disabled = false;
             }
         });
+    }
+
+    function attack(attacker) {
+        const stickmanLeft = document.querySelector(".stickman-left");
+        const stickmanRight = document.querySelector(".stickman-right");
+
+        console.log('attack started')
+
+        const stickman = attacker === 'stickman1' ? stickmanLeft : stickmanRight;
+        const attackClass = attacker === 'stickman1' ? 'stickman-attack-left' : 'stickman-attack-right';
+
+        if (!stickman) {
+            console.error('Stickman element not found.');
+            return;
+        }
+
+        stickman.classList.add(attackClass);
+
+        setTimeout(() => {
+            stickman.classList.remove(attackClass);
+        }, 1000);
     }
 
 </script>

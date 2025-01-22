@@ -4,6 +4,7 @@ import string
 from enum import Enum
 
 import redis
+from django.conf import settings
 
 
 class Commands(Enum):
@@ -53,7 +54,7 @@ class ConsumerUtils:
 
 class RedisServer:
     def __init__(self):
-        self.redis = redis.Redis(host='localhost', port=6379, db=0)
+        self.redis = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
     def add_channel(self, username, channel_name):
         channel_key = f'channel_{username}'

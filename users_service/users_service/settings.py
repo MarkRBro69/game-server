@@ -5,11 +5,13 @@ from pathlib import Path
 
 import config
 
-env = environ.Env()
-env.read_env(config.ENV_PATH)
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+env = environ.Env()
+env.read_env(BASE_DIR.parent / '.env')
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('USERS_SERVICE_SECRET_KEY')
@@ -17,7 +19,7 @@ SECRET_KEY = env('USERS_SERVICE_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.2']
+ALLOWED_HOSTS = ['127.0.0.2', 'users']
 
 # Application definition
 
@@ -64,10 +66,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'users_service.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
     'default': {

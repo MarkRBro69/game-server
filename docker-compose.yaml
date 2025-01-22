@@ -1,0 +1,55 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend_service/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - DJANGO_SETTINGS_MODULE=frontend_service.settings
+    depends_on:
+      - db
+      - redis
+
+  users:
+    build:
+      context: .
+      dockerfile: ./users_service/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - DJANGO_SETTINGS_MODULE=users_service.settings
+    depends_on:
+      - db
+      - redis
+
+  game:
+    build:
+      context: .
+      dockerfile: ./game_service/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - DJANGO_SETTINGS_MODULE=game_service.settings
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: game_users_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Qecz1357
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

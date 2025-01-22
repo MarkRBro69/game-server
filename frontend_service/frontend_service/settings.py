@@ -4,12 +4,13 @@ from pathlib import Path
 
 import config
 
-env = environ.Env()
-env.read_env(config.ENV_PATH)
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+env = environ.Env()
+env.read_env(BASE_DIR.parent / '.env')
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('FRONTEND_SERVICE_SECRET_KEY')
@@ -17,7 +18,7 @@ SECRET_KEY = env('FRONTEND_SERVICE_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'frontend']
 
 
 # Application definition
@@ -119,10 +120,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGGING = config.LOGGING
 
+REDIS_HOST = env('REDIS_HOST')
+REDIS_PORT = env('REDIS_PORT')
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }

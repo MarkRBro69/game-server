@@ -272,3 +272,38 @@ form button:hover {
     min-width: 200px;
     text-align: left;
 }
+
+
+.arena {
+    position: relative;
+    width: 800px;
+    height: 400px;
+    margin: 0 auto;
+    border: 2px solid #000;
+    background-color: #34495e;
+}
+
+.stickman {
+    position: absolute;
+    width: 300px;
+    height: auto;
+    bottom: 0;
+    transition: transform 0.5s ease;
+}
+
+.stickman-left {
+    left: 50px;
+}
+
+.stickman-right {
+    right: 50px;
+    transform: scaleX(-1);
+}
+
+.stickman-attack-left {
+    transform: translateX(50px);
+}
+
+.stickman-attack-right {
+    transform: translateX(-50px) scaleX(-1);
+}

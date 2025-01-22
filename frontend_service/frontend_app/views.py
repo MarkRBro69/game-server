@@ -1,3 +1,5 @@
+import logging
+
 import requests
 
 from django.core.cache import cache
@@ -6,6 +8,9 @@ from django.urls import reverse
 
 from frontend_app.utils import try_requests
 from frontend_service.microservices.users_api import *
+
+
+logger = logging.getLogger('game_server')
 
 
 def home(request):
@@ -31,6 +36,7 @@ def registration(request):
     if request.method == 'POST':
         user_data = request.POST  # Get user data from the form
 
+        logger.debug(get_users_registration_url())
         users_response = try_requests(requests.post, get_users_registration_url(), data=user_data)
 
         if users_response.get('status') == 201:
