@@ -1,3 +1,2 @@
 venv/
-.env
-docker_env/.docker_env
+#.env
