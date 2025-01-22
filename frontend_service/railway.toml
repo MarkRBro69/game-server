@@ -1,8 +1,8 @@
 [build]
   builder = "DOCKERFILE"
-  dockerfilePath = "/forntend_service/Dockerfile"
+  dockerfilePath = "./frontend_service/Dockerfile"
 
 [deploy]
   healthCheck = "/ping"
   restartPolicyMaxRetries = 10
-  restartPolicyType = "ON_FAILTURE"
+  restartPolicyType = "ON_FAILURE"
