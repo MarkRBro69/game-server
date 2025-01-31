@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ../frontend_service /app
 COPY ../requirements.txt /app/requirements.txt
-COPY config.py /app/config.py
+COPY ../config.py /app/config.py
 COPY docker_env /app
 
 RUN pip install --upgrade pip
