@@ -66,8 +66,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'users_service.wsgi.application'
 
-print(f'USER: {ENV('DB_USER')}')
-print(f'PASSWORD: {ENV('DB_PASSWORD')}')
+db_user = ENV('DB_USER')
+db_password = ENV('DB_PASSWORD')
+print(f'USER: {db_user}')
+print(f'PASSWORD: {db_password}')
 
 DATABASES = {
     'default': {
