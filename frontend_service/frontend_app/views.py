@@ -41,7 +41,6 @@ def registration(request):
 
         if users_response.get('status') == 201:
             response = redirect('login')  # Redirect to login
-            response.status_code = 201  # Change status code to 201
             return response
 
         else:
