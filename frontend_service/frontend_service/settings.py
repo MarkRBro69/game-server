@@ -4,25 +4,19 @@ from pathlib import Path
 
 import config
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+ENV = environ.Env()
+if ENV.bool('DOCKER_ENV', default=False):
+    ENV.read_env(BASE_DIR / '.env')  # Docker
+else:
+    ENV.read_env(BASE_DIR.parent / '.env')  # Local
 
-env = environ.Env()
-# env.read_env(BASE_DIR / '.env')  # Docker
-env.read_env(BASE_DIR.parent / '.env')  # Local
+SECRET_KEY = ENV('FRONTEND_SERVICE_SECRET_KEY')
 
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('FRONTEND_SERVICE_SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG')
+DEBUG = ENV.bool('DEBUG')
 
 ALLOWED_HOSTS = ['127.0.0.1', 'frontend']
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -65,20 +59,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'frontend_service.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -95,10 +81,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -107,22 +89,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 LOGGING = config.LOGGING
 
-REDIS_HOST = env('REDIS_HOST')
-REDIS_PORT = env('REDIS_PORT')
+REDIS_HOST = ENV('REDIS_HOST')
+REDIS_PORT = ENV('REDIS_PORT')
 
 CACHES = {
     'default': {

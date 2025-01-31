@@ -1,5 +1,3 @@
-ENV_PATH = r'.env'
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

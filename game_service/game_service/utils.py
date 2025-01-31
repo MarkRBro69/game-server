@@ -7,8 +7,12 @@ import redis
 import requests
 from django.conf import settings
 
-from game_service.microservices.users_api import get_users_add_win_url, get_users_add_loss_url, get_users_add_draw_url, \
+from game_service.microservices.users_api import (
+    get_users_add_win_url,
+    get_users_add_loss_url,
+    get_users_add_draw_url,
     get_users_change_rating_url
+)
 
 
 class Commands(Enum):
@@ -92,7 +96,7 @@ class RedisServer:
     def add_message(self, message):
         json_message = json.dumps(message)
         self.redis.rpush('global_messages', json_message)
-        self.redis.ltrim('global_messages', RedisServer.MAX_MESSAGES, -1)
+        self.redis.ltrim('global_messages', -RedisServer.MAX_MESSAGES, -1)
         self.redis.expire('global_messages', RedisServer.TTL)
 
     def get_all_messages(self):
@@ -173,5 +177,3 @@ class UsersManager:
             'rating': rating,
         }
         requests.patch(url, data=data)
-
-

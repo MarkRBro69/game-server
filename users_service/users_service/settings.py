@@ -1,5 +1,3 @@
-import sys
-
 import environ
 
 from pathlib import Path
@@ -7,22 +5,19 @@ from datetime import timedelta
 
 import config
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env()
-# env.read_env(BASE_DIR / '.env')  # Docker
-env.read_env(BASE_DIR.parent / '.env')  # Local
+ENV = environ.Env()
+if ENV.bool('DOCKER_ENV', default=False):
+    ENV.read_env(BASE_DIR / '.env')  # Docker
+else:
+    ENV.read_env(BASE_DIR.parent / '.env')  # Local
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('USERS_SERVICE_SECRET_KEY')
+SECRET_KEY = ENV('USERS_SERVICE_SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG')
+DEBUG = ENV.bool('DEBUG')
 
 ALLOWED_HOSTS = ['127.0.0.2', 'users']
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,16 +66,13 @@ WSGI_APPLICATION = 'users_service.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        'NAME': ENV('DB_NAME'),
+        'USER': ENV('DB_USER'),
+        'PASSWORD': ENV('DB_PASSWORD'),
+        'HOST': ENV('DB_HOST'),
+        'PORT': ENV('DB_PORT'),
     }
 }
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -97,9 +89,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -108,13 +97,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

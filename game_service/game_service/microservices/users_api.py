@@ -1,8 +1,6 @@
-import environ
-import config
+from game_service import settings
 
-env = environ.Env()
-env.read_env(config.ENV_PATH)
+env = settings.ENV
 
 USERS_SERVICE_PROTOCOL = 'http://'
 USERS_SERVICE_HOST = env('USERS_SERVICE_HOST')
