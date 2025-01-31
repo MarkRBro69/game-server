@@ -46,7 +46,7 @@ class GlobalConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
         data = json.loads(text_data)
         message = data['message']
         username = data['username']
@@ -92,10 +92,10 @@ class GlobalConsumer(AsyncWebsocketConsumer):
             }
 
             recipient_channel = self.redis.get_channel(recipient)
-            recipient_channel = recipient_channel.decode('utf-8')
-
-            await self.channel_layer.send(recipient_channel, message_to_send)
-            await self.channel_layer.send(self.channel_name, message_to_send)
+            if recipient_channel:
+                recipient_channel = recipient_channel.decode('utf-8')
+                await self.channel_layer.send(recipient_channel, message_to_send)
+                await self.channel_layer.send(self.channel_name, message_to_send)
 
     async def message(self, event):
         event_type = event['event_type']

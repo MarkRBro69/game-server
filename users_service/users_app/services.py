@@ -37,3 +37,27 @@ class UserService:
         except Exception as e:
             # Log or handle any unexpected exceptions
             raise Exception(f"An unexpected error occurred: {str(e)}")
+
+    @staticmethod
+    def add_win():
+        pass
+
+    @staticmethod
+    def add_loss():
+        pass
+
+    @staticmethod
+    def add_draw():
+        pass
+
+    @staticmethod
+    def change_rating(rating):
+        pass
+
+    @staticmethod
+    def get_rating():
+        pass
+
+    @staticmethod
+    def get_profile():
+        pass

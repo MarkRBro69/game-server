@@ -8,8 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 env = environ.Env()
-env.read_env(BASE_DIR / '.env')  # Docker
-# env.read_env(BASE_DIR.parent / '.env')  # Local
+# env.read_env(BASE_DIR / '.env')  # Docker
+env.read_env(BASE_DIR.parent / '.env')  # Local
 
 
 SECRET_KEY = env('GAME_SERVICE_SECRET_KEY')

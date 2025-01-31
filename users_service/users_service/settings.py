@@ -1,18 +1,18 @@
+import sys
+
 import environ
 
-from datetime import timedelta
 from pathlib import Path
+from datetime import timedelta
 
 import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 env = environ.Env()
-env.read_env(BASE_DIR / '.env')  # Docker
-# env.read_env(BASE_DIR.parent / '.env')  # Local
-
+# env.read_env(BASE_DIR / '.env')  # Docker
+env.read_env(BASE_DIR.parent / '.env')  # Local
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('USERS_SERVICE_SECRET_KEY')
@@ -79,7 +79,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -98,7 +97,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -109,7 +107,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

@@ -5,13 +5,12 @@
 {% block content %}
 <div>
     <h1>Fight</h1>
-    <div id="timer">Time: 5</div>
-    <button id="btn-ready" onclick="sendMove('ready')">Ready</button>
-    <button id="btn-attack" onclick="sendMove('attack')">Attack</button>
-    <button id="btn-defend" onclick="sendMove('defend')">Defend</button>
-    <button id="btn-feint" onclick="sendMove('feint')">Feint</button>
-    <button id="btn-rest" onclick="sendMove('rest')">Rest</button>
-    <button id="btn-pass" onclick="sendMove('pass')">Pass</button>
+    <div id="timer">Time: </div>
+    <button id="btn-attack" onclick="sendMove('attack', this)">Attack</button>
+    <button id="btn-defend" onclick="sendMove('defend', this)">Defend</button>
+    <button id="btn-feint" onclick="sendMove('feint', this)">Feint</button>
+    <button id="btn-rest" onclick="sendMove('rest', this)">Rest</button>
+    <button id="btn-pass" onclick="sendMove('pass', this)">Pass</button>
 </div>
 
 <div class="container">
@@ -35,7 +34,7 @@
         </div>
         <div class="section">
             <h2>Message</h2>
-            <p id="game-message">-</p>
+            <div id="game-message" class="chat-box"></div>
         </div>
     </div>
     <p class="error" id="error-message"></p>
@@ -52,6 +51,8 @@
     const room_token = '{{ room_token|escapejs }}';
     const socket = new WebSocket(`ws://127.0.0.3:8003/ws/game/${room_token}/${username}/`);
 
+    const timer = document.getElementById('timer');
+
     const p1Username = document.getElementById('p1-username');
     const p1Health = document.getElementById('p1-health');
     const p1Energy = document.getElementById('p1-energy');
@@ -65,6 +66,8 @@
     const gameMessage = document.getElementById('game-message');
     const errorMessage = document.getElementById('error-message');
 
+    let lastButton = null;
+
     socket.onopen = function() {
         console.log('WebSocket connection established.');
     };
@@ -75,25 +78,56 @@
         try {
             const data = JSON.parse(event.data);
 
-            p1Username.textContent = data.p1_username;
-            p1Health.textContent = data.p1_health;
-            p1Energy.textContent = data.p1_energy;
-            p1Actions.textContent = data.p1_available_actions;
+            if (data.message_type === 'timer') {
+                timer.textContent = data.timer;
+            }
 
-            p2Username.textContent = data.p2_username;
-            p2Health.textContent = data.p2_health;
-            p2Energy.textContent = data.p2_energy;
-            p2Actions.textContent = data.p2_available_actions;
+            if (data.message_type === 'game started') {
+                p1Username.textContent = data.p1_username;
+                p2Username.textContent = data.p2_username;
 
-            gameMessage.textContent = data.message;
+                p1Health.textContent = data.p1_status[0];
+                p1Energy.textContent = data.p1_status[1];
+                p1Actions.textContent = data.p1_status[2];
 
-            if (username === data.p1_username) {
-                updateButtons(data.p1_available_actions || '');
-           } else {
-              updateButtons(data.p2_available_actions || '');
-           }
+                p2Health.textContent = data.p2_status[0];
+                p2Energy.textContent = data.p2_status[1];
+                p2Actions.textContent = data.p2_status[2];
+
+                if (username === data.p1_username) {
+                    updateButtons(data.p1_status[2] || '');
+                } else {
+                    updateButtons(data.p2_status[2] || '');
+                }
+
+                addMessage(data.message);
+            }
+
+            if (data.message_type === 'turn') {
+                p1Health.textContent = data.p1_status[0];
+                p1Energy.textContent = data.p1_status[1];
+                p1Actions.textContent = data.p1_status[2];
+
+                p2Health.textContent = data.p2_status[0];
+                p2Energy.textContent = data.p2_status[1];
+                p2Actions.textContent = data.p2_status[2];
+
+                if (username === data.p1_username) {
+                    updateButtons(data.p1_status[2] || '');
+                } else {
+                    updateButtons(data.p2_status[2] || '');
+                }
+
+                addMessage(data.message);
+                parseAnimation(data)
+            }
+
+            if (data.message_type === 'game result') {
+                addMessage(data.message);
+            }
 
         } catch (err) {
+            console.error('Error details:', err);
             errorMessage.textContent = 'Error processing data: ' + err.message;
         }
     };
@@ -106,24 +140,59 @@
         console.log('WebSocket connection closed.');
     };
 
-    function sendMove(choice) {
+    function parseAnimation(data) {
+            if (data.p1_action === 'attack') {
+                const attacker = 'stickman1';
+                attack(attacker);
+            }
+            if (data.p2_action === 'attack') {
+                const attacker = 'stickman2';
+                attack(attacker);
+            }
+            if (data.p1_action === 'defend') {
+                const defender = 'stickman1';
+                defend(defender);
+            }
+            if (data.p2_action === 'defend') {
+                const defender = 'stickman2';
+                defend(defender);
+            }
+            if (data.p1_action === 'feint') {
+                const fainter = 'stickman1';
+                feint(fainter);
+            }
+            if (data.p2_action === 'feint') {
+                const fainter = 'stickman2';
+                feint(fainter);
+            }
+    }
+
+    function sendMove(choice, button) {
+        console.log('Send Move')
+
+        if (lastButton) {
+            lastButton.classList.remove('active');
+        }
+
+        button.classList.add('active');
+        lastButton = button;
+
         socket.send(JSON.stringify({
-            action: 'make_move',
             player: username,
             choice: choice,
         }));
-
-        if (choice === 'attack') {
-            const attacker = username === 'Mark' ? 'stickman1' : 'stickman2';
-            attack(attacker);
-        }
     }
 
     function updateButtons(availableActions) {
-        availableActions = availableActions.split(',');
+        console.log(availableActions)
+
+        if (lastButton) {
+            lastButton.classList.remove('active');
+        } else {
+            console.log('lastButton not found');
+        }
 
         const buttons = {
-            ready: document.getElementById('btn-ready'),
             attack: document.getElementById('btn-attack'),
             defend: document.getElementById('btn-defend'),
             feint: document.getElementById('btn-feint'),
@@ -162,6 +231,61 @@
             stickman.classList.remove(attackClass);
         }, 1000);
     }
+
+    function defend(defender) {
+        const stickmanLeft = document.querySelector(".stickman-left");
+        const stickmanRight = document.querySelector(".stickman-right");
+
+        console.log('defense started');
+
+        const stickman = defender === 'stickman1' ? stickmanLeft : stickmanRight;
+        const defendClass = defender === 'stickman1' ? 'stickman-defend-left' : 'stickman-defend-right';
+
+        if (!stickman) {
+            console.error('Stickman element not found.');
+            return;
+        }
+
+        stickman.classList.add(defendClass);
+
+        setTimeout(() => {
+            stickman.classList.remove(defendClass);
+        }, 1000);
+    }
+
+    function feint(fainter) {
+        const stickmanLeft = document.querySelector(".stickman-left");
+        const stickmanRight = document.querySelector(".stickman-right");
+
+        console.log('feint started');
+
+        const stickman = fainter === 'stickman1' ? stickmanLeft : stickmanRight;
+        const feintClass = fainter === 'stickman1' ? 'stickman-feint-left' : 'stickman-feint-right';
+
+        if (!stickman) {
+            console.error('Stickman element not found.');
+            return;
+        }
+
+        stickman.classList.add(feintClass);
+
+        setTimeout(() => {
+            stickman.classList.remove(feintClass);
+        }, 500);
+    }
+
+    function addMessage(message) {
+        const chatBox = document.getElementById("game-message");
+
+        const messageElement = document.createElement("p");
+
+        messageElement.innerHTML = message.replace(/\n/g, '<br>');
+
+        chatBox.appendChild(messageElement);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
 
 </script>
 {% endblock %}

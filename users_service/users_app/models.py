@@ -17,7 +17,7 @@ class CustomUserModel(AbstractBaseUser):
     """
 
     # The username field for the user (must be unique)
-    username = models.CharField(max_length=32, unique=True, blank=False, null=False)
+    username = models.CharField(max_length=32, unique=True, blank=False, null=False, db_index=True)
 
     # The email field for the user (must be unique)
     email = models.EmailField(unique=True, blank=False, null=False)
@@ -39,6 +39,11 @@ class CustomUserModel(AbstractBaseUser):
 
     # The field to be used for user authentication (this will be 'username')
     USERNAME_FIELD = 'username'
+
+    wins = models.IntegerField(default=0)
+    losses = models.IntegerField(default=0)
+    draws = models.IntegerField(default=0)
+    rating = models.IntegerField(default=1000, db_index=True)
 
     def __str__(self):
         """

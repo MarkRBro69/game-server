@@ -1,4 +1,7 @@
 import requests
+from django.core.cache import cache
+
+from frontend_service.microservices.users_api import get_users_get_user_url
 
 
 def try_requests(method, url, data=None, headers=None, timeout=5):
@@ -43,3 +46,46 @@ def try_requests(method, url, data=None, headers=None, timeout=5):
         context['errors'] = {'error': 'Unexpected error.'}
 
     return context
+
+
+def token_auth(func):
+    def wrapper(*args, **kwargs):
+        func_request = args[0]
+        access = func_request.COOKIES.get('uat')
+        refresh = func_request.COOKIES.get('urt')
+        user = cache.get(access)
+        if user:
+            result = func(*args, user=user, **kwargs)
+        else:
+            data = {
+                'access': access,
+                'refresh': refresh,
+            }
+            users_response = try_requests(requests.post, get_users_get_user_url(), data=data)
+            user = users_response.get('response').json().get('user')
+            uat = users_response.get('response').json().get('uat')
+            urt = users_response.get('response').json().get('urt')
+            cache.set(access, user, timeout=900)
+            result = func(*args, user=user, **kwargs)
+            if uat:
+                result.set_cookie(
+                    key='uat',
+                    value=access,
+                    max_age=900,
+                    secure=True,
+                    httponly=True,
+                    samesite='Lax',
+                )
+            if urt:
+                result.set_cookie(
+                    key='urt',
+                    value=refresh,
+                    max_age=3600 * 24,
+                    secure=True,
+                    httponly=True,
+                    samesite='Lax',
+                )
+        return result
+    return wrapper
+
+

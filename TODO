@@ -1,6 +1,0 @@
-TODO
-
-- add getting user data if no user data in cache
-- limit number messages in global chat's cache
-- ConsumerUtils, fix command with no parameters
-- fix wrong recipient in private message
