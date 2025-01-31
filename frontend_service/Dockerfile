@@ -2,7 +2,7 @@ FROM python:3.11
 
 WORKDIR /app
 
-COPY . /app
+COPY ../frontend_service /app
 COPY requirements.txt /app/requirements.txt
 COPY config.py /app/config.py
 COPY docker_env /app
