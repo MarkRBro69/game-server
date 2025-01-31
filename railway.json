@@ -1,0 +1,37 @@
+{
+  "services": [
+    {
+      "name": "frontend",
+      "build": {
+        "context": "frontend_service",
+        "dockerfile": "frontend_service/Dockerfile"
+      },
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "frontend_service.settings",
+        "DOCKER_ENV": "True"
+      }
+    },
+    {
+      "name": "game",
+      "build": {
+        "context": "game_service",
+        "dockerfile": "game_service/Dockerfile"
+      },
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "frontend_service.settings",
+        "DOCKER_ENV": "True"
+      }
+    },
+    {
+      "name": "users",
+      "build": {
+        "context": "users_service",
+        "dockerfile": "users_service/Dockerfile"
+      },
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "frontend_service.settings",
+        "DOCKER_ENV": "True"
+      }
+    }
+  ]
+}
