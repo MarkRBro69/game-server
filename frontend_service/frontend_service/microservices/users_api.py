@@ -19,11 +19,19 @@ USERS_GET_RATING = 'get_rating/'
 USERS_GET_PROFILE = 'get_profile/'
 USERS_GET_USER = 'get_user/'
 
+# USERS_API = ''.join([
+#     USERS_SERVICE_PROTOCOL,
+#     USERS_SERVICE_HOST,
+#     ':',
+#     USERS_SERVICE_PORT,
+#     '/',
+#     USERS_SERVICE_PREFIX,
+#     USERS_API_VERSION,
+# ])
+
 USERS_API = ''.join([
     USERS_SERVICE_PROTOCOL,
     USERS_SERVICE_HOST,
-
-    USERS_SERVICE_PORT,
     '/',
     USERS_SERVICE_PREFIX,
     USERS_API_VERSION,

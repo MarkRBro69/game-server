@@ -66,11 +66,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'users_service.wsgi.application'
 
-db_user = ENV('DB_USER')
-db_password = ENV('DB_PASSWORD')
-print(f'USER: {db_user}')
-print(f'PASSWORD: {db_password}')
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

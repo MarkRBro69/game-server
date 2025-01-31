@@ -13,11 +13,19 @@ GAME_WS_VERSION = 'ws/'
 
 GAME_LOBBY = 'game/'
 
+# GAME_API = ''.join([
+#     GAME_SERVICE_PROTOCOL,
+#     GAME_SERVICE_HOST,
+#     ':',
+#     GAME_SERVICE_PORT,
+#     '/',
+#     GAME_SERVICE_PREFIX,
+#     GAME_API_VERSION,
+# ])
+
 GAME_API = ''.join([
     GAME_SERVICE_PROTOCOL,
     GAME_SERVICE_HOST,
-
-    GAME_SERVICE_PORT,
     '/',
     GAME_SERVICE_PREFIX,
     GAME_API_VERSION,
