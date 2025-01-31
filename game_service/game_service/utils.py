@@ -4,13 +4,21 @@ import string
 from enum import Enum
 
 import redis
+import requests
 from django.conf import settings
+
+from game_service.microservices.users_api import (
+    get_users_add_win_url,
+    get_users_add_loss_url,
+    get_users_add_draw_url,
+    get_users_change_rating_url
+)
 
 
 class Commands(Enum):
     INVITE = '/invite'
     PRIVATE = '/private'
-    MESSAGE = '/massage'
+    MESSAGE = '/message'
 
     @staticmethod
     def get_values_set():
@@ -21,10 +29,12 @@ class ConsumerUtils:
     @staticmethod
     def parse_message(message):
         recipient = None
+        parsed_message = ''
         if message.startswith('/'):
             split_message = message.split(' ', 1)
             command = split_message[0]
-            parsed_message = split_message[1]
+            if len(split_message) > 1:
+                parsed_message = split_message[1]
             commands_values = Commands.get_values_set()
 
             try:
@@ -45,14 +55,19 @@ class ConsumerUtils:
 
     @staticmethod
     def parse_recipient(message):
+        parsed_message = ''
         split_message = message.split(' ', 1)
         recipient = split_message[0]
-        parsed_message = split_message[1]
+        if len(split_message) > 1:
+            parsed_message = split_message[1]
 
         return recipient, parsed_message
 
 
 class RedisServer:
+    MAX_MESSAGES = 1000
+    TTL = 3600 * 24
+
     def __init__(self):
         self.redis = redis.Redis(
             host=settings.REDIS_HOST,
@@ -64,7 +79,7 @@ class RedisServer:
 
     def add_channel(self, username, channel_name):
         channel_key = f'channel_{username}'
-        self.redis.set(channel_key, channel_name)
+        self.redis.set(channel_key, channel_name, ex=RedisServer.TTL)
 
     def get_channel(self, username):
         channel_key = f'channel_{username}'
@@ -78,6 +93,7 @@ class RedisServer:
         user_private = f'private_{recipient}'
         json_massage = json.dumps(message)
         self.redis.rpush(user_private, json_massage)
+        self.redis.expire(user_private, RedisServer.TTL)
 
     def delete_private(self, username):
         user_private = f'private_{username}'
@@ -86,6 +102,8 @@ class RedisServer:
     def add_message(self, message):
         json_message = json.dumps(message)
         self.redis.rpush('global_messages', json_message)
+        self.redis.ltrim('global_messages', -RedisServer.MAX_MESSAGES, -1)
+        self.redis.expire('global_messages', RedisServer.TTL)
 
     def get_all_messages(self):
         return self.redis.lrange('global_messages', 0, -1)
@@ -93,6 +111,7 @@ class RedisServer:
     def add_user(self, user):
         json_user = json.dumps(user)
         self.redis.zadd('global_users', {json_user: 0})
+        self.redis.expire('global_users', RedisServer.TTL)
 
     def delete_user(self, user):
         json_user = json.dumps(user)
@@ -114,6 +133,7 @@ class RedisServer:
 
     def add_room(self, room_token):
         self.redis.sadd('rooms', room_token)
+        self.redis.expire('rooms', RedisServer.TTL)
 
     def is_rooms_member(self, key, value):
         return self.redis.sismember(key, value)
@@ -134,3 +154,32 @@ class RoomManager:
                 return random_token
 
         return None
+
+
+class UsersManager:
+    @staticmethod
+    def add_win(username):
+        url = get_users_add_win_url()
+        data = {'username': username}
+        requests.patch(url, data=data)
+
+    @staticmethod
+    def add_loss(username):
+        url = get_users_add_loss_url()
+        data = {'username': username}
+        requests.patch(url, data=data)
+
+    @staticmethod
+    def add_draw(username):
+        url = get_users_add_draw_url()
+        data = {'username': username}
+        requests.patch(url, data=data)
+
+    @staticmethod
+    def change_rating(username, rating):
+        url = get_users_change_rating_url()
+        data = {
+            'username': username,
+            'rating': rating,
+        }
+        requests.patch(url, data=data)

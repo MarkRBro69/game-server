@@ -6,15 +6,15 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+ENV = environ.Env()
+if ENV.bool('DOCKER_ENV', default=False):
+    ENV.read_env(BASE_DIR / '.env')  # Docker
+else:
+    ENV.read_env(BASE_DIR.parent / '.env')  # Local
 
-env = environ.Env()
-env.read_env(BASE_DIR / '.env')  # Docker
-# env.read_env(BASE_DIR.parent / '.env')  # Local
+SECRET_KEY = ENV('GAME_SERVICE_SECRET_KEY')
 
-
-SECRET_KEY = env('GAME_SERVICE_SECRET_KEY')
-
-DEBUG = env.bool('DEBUG')
+DEBUG = ENV.bool('DEBUG')
 
 ALLOWED_HOSTS = ['127.0.0.3', 'game', 'game-production-2d31.up.railway.app']
 
@@ -102,10 +102,10 @@ LOGGING = config.LOGGING
 
 ASGI_APPLICATION = "game_service.asgi.application"
 
-REDIS_USERNAME = env('REDIS_USERNAME')
-REDIS_PASSWORD = env('REDIS_PASSWORD')
-REDIS_HOST = env('REDIS_HOST')
-REDIS_PORT = env('REDIS_PORT')
+REDIS_HOST = ENV('REDIS_HOST')
+REDIS_PORT = ENV('REDIS_PORT')
+REDIS_USERNAME = ENV('REDIS_USERNAME')
+REDIS_PASSWORD = ENV('REDIS_PASSWORD')
 
 CHANNEL_LAYERS = {
     'default': {

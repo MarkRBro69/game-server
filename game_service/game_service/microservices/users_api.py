@@ -1,8 +1,8 @@
-from frontend_service import settings
+from game_service import settings
 
 env = settings.ENV
 
-USERS_SERVICE_PROTOCOL = 'https://'
+USERS_SERVICE_PROTOCOL = 'http://'
 USERS_SERVICE_HOST = env('USERS_SERVICE_HOST')
 USERS_SERVICE_PORT = env('USERS_SERVICE_PORT')
 
@@ -22,7 +22,7 @@ USERS_GET_USER = 'get_user/'
 USERS_API = ''.join([
     USERS_SERVICE_PROTOCOL,
     USERS_SERVICE_HOST,
-
+    ':',
     USERS_SERVICE_PORT,
     '/',
     USERS_SERVICE_PREFIX,

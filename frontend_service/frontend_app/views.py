@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
-from frontend_app.utils import try_requests
+from frontend_app.utils import try_requests, token_auth
 from frontend_service.microservices.users_api import *
 
 
@@ -40,8 +40,7 @@ def registration(request):
         users_response = try_requests(requests.post, get_users_registration_url(), data=user_data)
 
         if users_response.get('status') == 201:
-            success_url = reverse('login')  # Get login url
-            response = redirect(success_url)  # Redirect to login
+            response = redirect('login')  # Redirect to login
             response.status_code = 201  # Change status code to 201
             return response
 
@@ -74,13 +73,13 @@ def login(request):
             access = response_json.get('access')
             refresh = response_json.get('refresh')
             user_data = response_json.get('user')
-            cache.set(refresh, user_data, timeout=3600)
+            cache.set(access, user_data, timeout=900)
 
-            success_url = reverse('desktop')
-            response = redirect(success_url)
+            response = redirect('desktop')
             response.set_cookie(
                 key='uat',
                 value=access,
+                max_age=900,
                 secure=True,
                 httponly=True,
                 samesite='Lax',
@@ -88,6 +87,7 @@ def login(request):
             response.set_cookie(
                 key='urt',
                 value=refresh,
+                max_age=3600 * 24,
                 secure=True,
                 httponly=True,
                 samesite='Lax',
@@ -101,37 +101,71 @@ def login(request):
             return response
 
 
-def desktop(request):
+def logout(request):
+    if request.method == 'GET':
+        access = request.COOKIES.get('uat')
+        cache.delete(access)
+        response = redirect('login')
+        response.delete_cookie('uat')
+        response.delete_cookie('urt')
+        return response
+
+
+@token_auth
+def desktop(request, user=None):
     context = {
         'title': 'Desktop',
     }
     if request.method == 'GET':
-        refresh = request.COOKIES.get('urt')
-        user = cache.get(refresh)
         context['user'] = user
         response = render(request, 'frontend_app/desktop.html', context)
         return response
 
 
-def global_lobby(request):
+def rating(request):
+    context = {
+        'title': 'Rating',
+    }
+    if request.method == 'GET':
+        url = get_users_get_rating_url()
+        method = requests.get
+        rating_response = try_requests(method, url)
+        context['users'] = rating_response.get('response').json().get('users')
+        response = render(request, 'frontend_app/rating.html', context=context)
+        return response
+
+
+def profile(request, username):
+    context = {
+        'title': 'Profile',
+    }
+    if request.method == 'GET':
+        url = get_users_get_profile_url()
+        method = requests.get
+        data = {'username': username}
+        profile_response = try_requests(method, url, data=data)
+        context['user'] = profile_response.get('response').json().get('profile')
+        response = render(request, 'frontend_app/profile.html', context=context)
+        return response
+
+
+@token_auth
+def global_lobby(request, user=None):
     context = {
         'title': 'Game lobby',
     }
     if request.method == 'GET':
-        refresh = request.COOKIES.get('urt')
-        user = cache.get(refresh)
         context['user'] = user
         response = render(request, 'frontend_app/global_lobby.html', context)
         return response
 
 
-def game_lobby(request, room_token):
+@token_auth
+def game_lobby(request, room_token, user=None):
     context = {
         'title': 'Game lobby',
     }
     if request.method == 'GET':
-        refresh = request.COOKIES.get('urt')
-        user = cache.get(refresh)
         context['user'] = user
         context['room_token'] = room_token
         response = render(request, 'frontend_app/game_lobby.html', context)

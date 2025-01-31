@@ -1,0 +1,15 @@
+{% extends 'frontend_app/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Profile: {{ user.username }}</h1>
+
+    <h2>Statistics</h2>
+    <ul class="stats-list">
+        <li><strong>Rating:</strong> {{ user.rating }}</li>
+        <li><strong>Wins:</strong> {{ user.wins }}</li>
+        <li><strong>Losses:</strong> {{ user.losses }}</li>
+        <li><strong>Draws:</strong> {{ user.draws }}</li>
+    </ul>
+</div>
+{% endblock %}
