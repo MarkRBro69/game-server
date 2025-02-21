@@ -76,7 +76,7 @@ def login(request):
             key='uat',
             value=str(tokens.access_token),
             max_age=900,
-            secure=False,
+            secure=True,
             httponly=True,
             samesite='None',
         )
@@ -84,7 +84,7 @@ def login(request):
             key='urt',
             value=str(tokens),
             max_age=3600 * 24,
-            secure=False,
+            secure=True,
             httponly=True,
             samesite='None',
         )
