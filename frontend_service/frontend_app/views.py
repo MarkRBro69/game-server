@@ -64,6 +64,7 @@ def login(request):
         password = request.POST['password']
         data = {'username': username, 'password': password}
 
+        logger.debug(f'Send request to: {get_users_login_url()}')
         users_response = try_requests(requests.post, get_users_login_url(), data=data)
 
         if users_response.get('status') == 200:
