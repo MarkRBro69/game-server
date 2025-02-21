@@ -4,9 +4,9 @@ import requests
 
 from django.core.cache import cache
 from django.shortcuts import render, redirect
-from django.urls import reverse
 
 from frontend_app.utils import try_requests, token_auth
+from frontend_service.microservices.game_api import get_global_lobby_url
 from frontend_service.microservices.users_api import *
 
 
@@ -156,6 +156,7 @@ def global_lobby(request, user=None):
     }
     if request.method == 'GET':
         context['user'] = user
+        context['global_url'] = get_global_lobby_url()
         response = render(request, 'frontend_app/global_lobby.html', context)
         return response
 
