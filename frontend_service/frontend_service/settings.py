@@ -8,15 +8,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV = environ.Env()
 if ENV.bool('DOCKER_ENV', default=False):
-    ENV.read_env(BASE_DIR / '.env')  # Docker
+    ENV.read_env(BASE_DIR.parent / '.env.docker')  # Docker
 else:
-    ENV.read_env(BASE_DIR.parent / '.env')  # Local
+    ENV.read_env(BASE_DIR.parent / '.env.local')  # Local
 
 SECRET_KEY = ENV('FRONTEND_SERVICE_SECRET_KEY')
 
 DEBUG = ENV.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'frontend']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'frontend', 'frontend-production-df30.up.railway.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -26,12 +26,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'frontend_app.apps.FrontendAppConfig'
+    'corsheaders',
+
+    'frontend_app.apps.FrontendAppConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -108,3 +111,12 @@ CACHES = {
         }
     }
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "https://frontend-production-df30.up.railway.app",
+    "http://localhost:5173",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://frontend-production-df30.up.railway.app',
+]

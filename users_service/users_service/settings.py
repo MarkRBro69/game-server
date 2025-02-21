@@ -9,15 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV = environ.Env()
 if ENV.bool('DOCKER_ENV', default=False):
-    ENV.read_env(BASE_DIR / '.env')  # Docker
+    ENV.read_env(BASE_DIR.parent / '.env.docker')  # Docker
 else:
-    ENV.read_env(BASE_DIR.parent / '.env')  # Local
+    ENV.read_env(BASE_DIR.parent / '.env.local')  # Local
 
 SECRET_KEY = ENV('USERS_SERVICE_SECRET_KEY')
 
 DEBUG = ENV.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.2', 'users']
+ALLOWED_HOSTS = ['127.0.0.2', 'localhost', 'users', 'users-production-52dd.up.railway.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
 
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -119,3 +121,9 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "https://users-production-52dd.up.railway.app",
+    "https://frontend-production-df30.up.railway.app",
+    "http://localhost:5173",
+]

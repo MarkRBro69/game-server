@@ -8,15 +8,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV = environ.Env()
 if ENV.bool('DOCKER_ENV', default=False):
-    ENV.read_env(BASE_DIR / '.env')  # Docker
+    ENV.read_env(BASE_DIR.parent / '.env.docker')  # Docker
 else:
-    ENV.read_env(BASE_DIR.parent / '.env')  # Local
+    ENV.read_env(BASE_DIR.parent / '.env.local')  # Local
 
 SECRET_KEY = ENV('GAME_SERVICE_SECRET_KEY')
 
 DEBUG = ENV.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.3', 'game']
+ALLOWED_HOSTS = ['127.0.0.3', 'localhost', 'game', 'game-production-2d31.up.railway.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'corsheaders',
     'channels',
 
     'game_app.apps.GameAppConfig',
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -111,3 +113,8 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "https://game-production-2d31.up.railway.app",
+    "http://localhost:5173",
+]
