@@ -24,6 +24,7 @@ if RUNNING == 'railway':
 
     USERS_API = ''.join([
         USERS_SERVICE_PROTOCOL,
+        USERS_SERVICE_HOST,
         '/',
         USERS_SERVICE_PREFIX,
         USERS_API_VERSION,
