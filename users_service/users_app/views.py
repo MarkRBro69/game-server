@@ -99,11 +99,17 @@ def get_user(request):
     token_is_valid = False
     access = request.data.get('access')
     refresh = request.data.get('refresh')
+
+    logger.debug(f'Access: {access}')
+    logger.debug(f'Refresh: {refresh}')
+
     if access is None:
         access = request.COOKIES.get('uat')
+        logger.debug(f'Access: {access}')
 
     if refresh is None:
         refresh = request.COOKIES.get('urt')
+        logger.debug(f'Refresh: {refresh}')
 
     uat = None
     urt = None
