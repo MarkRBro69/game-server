@@ -105,14 +105,29 @@ ASGI_APPLICATION = "game_service.asgi.application"
 REDIS_HOST = ENV('REDIS_HOST')
 REDIS_PORT = ENV('REDIS_PORT')
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
+RUNNING = ENV('RUNNING')
+if RUNNING == 'railway':
+    REDIS_USERNAME = ENV('REDIS_USERNAME')
+    REDIS_PASSWORD = ENV('REDIS_PASSWORD')
+
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [f"redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1"],
+            },
         },
-    },
-}
+    }
+
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [(REDIS_HOST, REDIS_PORT)],
+            },
+        },
+    }
 
 CORS_ALLOWED_ORIGINS = [
     "https://game-production-2d31.up.railway.app",

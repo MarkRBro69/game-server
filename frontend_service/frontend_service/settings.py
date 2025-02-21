@@ -102,15 +102,30 @@ LOGGING = config.LOGGING
 REDIS_HOST = ENV('REDIS_HOST')
 REDIS_PORT = ENV('REDIS_PORT')
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+RUNNING = ENV('RUNNING')
+if RUNNING == 'railway':
+    REDIS_USERNAME = ENV('REDIS_USERNAME')
+    REDIS_PASSWORD = ENV('REDIS_PASSWORD')
+
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
         }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
+        }
+    }
 
 CORS_ALLOWED_ORIGINS = [
     "https://frontend-production-df30.up.railway.app",

@@ -69,7 +69,16 @@ class RedisServer:
     TTL = 3600 * 24
 
     def __init__(self):
-        self.redis = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
+        if settings.RUNNING == 'railway':
+            self.redis = redis.Redis(
+                host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                db=0,
+                username=settings.REDIS_USERNAME,
+                password=settings.REDIS_PASSWORD,
+            )
+        else:
+            self.redis = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
     def add_channel(self, username, channel_name):
         channel_key = f'channel_{username}'
@@ -131,6 +140,13 @@ class RedisServer:
 
     def is_rooms_member(self, key, value):
         return self.redis.sismember(key, value)
+
+    def add_search(self, username):
+        self.redis.sadd('search_pool', username)
+        self.redis.expire('search_pool', RedisServer.TTL)
+
+    def delete_search(self, username):
+        self.redis.srem('search_pool', username)
 
 
 class RoomManager:

@@ -3,7 +3,7 @@ import logging
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from game_service.game import GameHandler, Player
+from game_app.game.game import GameHandler, Player
 
 
 logger = logging.getLogger('game_server')

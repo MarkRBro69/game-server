@@ -1,3 +1,7 @@
 venv/
-.env
+__pycache__/
+.idea
+.env.docker
+.env.local
+.env.railway
 TODO

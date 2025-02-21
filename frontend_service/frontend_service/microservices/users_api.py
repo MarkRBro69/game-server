@@ -1,8 +1,7 @@
-from frontend_service import settings
+from game_service import settings
 
 env = settings.ENV
 
-USERS_SERVICE_PROTOCOL = 'http://'
 USERS_SERVICE_HOST = env('USERS_SERVICE_HOST')
 USERS_SERVICE_PORT = env('USERS_SERVICE_PORT')
 
@@ -19,15 +18,28 @@ USERS_GET_RATING = 'get_rating/'
 USERS_GET_PROFILE = 'get_profile/'
 USERS_GET_USER = 'get_user/'
 
-USERS_API = ''.join([
-    USERS_SERVICE_PROTOCOL,
-    USERS_SERVICE_HOST,
-    ':',
-    USERS_SERVICE_PORT,
-    '/',
-    USERS_SERVICE_PREFIX,
-    USERS_API_VERSION,
-])
+RUNNING = env('RUNNING')
+if RUNNING == 'railway':
+    USERS_SERVICE_PROTOCOL = 'https://'
+
+    USERS_API = ''.join([
+        USERS_SERVICE_PROTOCOL,
+        '/',
+        USERS_SERVICE_PREFIX,
+        USERS_API_VERSION,
+    ])
+else:
+    USERS_SERVICE_PROTOCOL = 'http://'
+
+    USERS_API = ''.join([
+        USERS_SERVICE_PROTOCOL,
+        USERS_SERVICE_HOST,
+        ':',
+        USERS_SERVICE_PORT,
+        '/',
+        USERS_SERVICE_PREFIX,
+        USERS_API_VERSION,
+    ])
 
 
 def get_users_registration_url():
