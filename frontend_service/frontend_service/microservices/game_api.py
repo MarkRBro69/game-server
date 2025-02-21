@@ -25,6 +25,14 @@ if RUNNING == 'railway':
         GAME_SERVICE_PREFIX,
         GAME_API_VERSION,
     ])
+
+    GAME_WS = ''.join([
+        GAME_SERVICE_WS_PROTOCOL,
+        GAME_SERVICE_HOST,
+        '/',
+        GAME_WS_VERSION,
+    ])
+
 else:
     GAME_SERVICE_PROTOCOL = 'http://'
     GAME_SERVICE_WS_PROTOCOL = 'ws://'
@@ -39,12 +47,19 @@ else:
         GAME_API_VERSION,
     ])
 
-GAME_WS = ''.join([GAME_SERVICE_PROTOCOL, GAME_SERVICE_HOST, GAME_WS_VERSION])
+    GAME_WS = ''.join([
+        GAME_SERVICE_WS_PROTOCOL,
+        GAME_SERVICE_HOST,
+        ':',
+        GAME_SERVICE_PORT,
+        '/',
+        GAME_WS_VERSION,
+    ])
 
 
 def get_global_lobby_url():
-    return f'{GAME_SERVICE_WS_PROTOCOL}{GAME_SERVICE_HOST}/{GAME_WS_VERSION}{GAME_GLOBAL}'
+    return f'{GAME_WS}{GAME_GLOBAL}'
 
 
 def get_game_lobby_url():
-    return f'{GAME_SERVICE_WS_PROTOCOL}{GAME_SERVICE_HOST}{GAME_WS_VERSION}{GAME_LOBBY}'
+    return f'{GAME_WS}{GAME_LOBBY}'
