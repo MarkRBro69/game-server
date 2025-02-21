@@ -76,13 +76,17 @@ def login(request):
             key='uat',
             value=str(tokens.access_token),
             max_age=900,
+            secure=False,
             httponly=True,
+            samesite='None',
         )
         response.set_cookie(
             key='urt',
             value=str(tokens),
             max_age=3600 * 24,
+            secure=False,
             httponly=True,
+            samesite='None',
         )
 
         return response
