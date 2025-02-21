@@ -67,6 +67,7 @@ class ConsumerUtils:
 class RedisServer:
     MAX_MESSAGES = 1000
     TTL = 3600 * 24
+    TIME_TO_SEARCH = '30'
 
     def __init__(self):
         if settings.RUNNING == 'railway':
@@ -142,11 +143,11 @@ class RedisServer:
         return self.redis.sismember(key, value)
 
     def add_search(self, username):
-        self.redis.sadd('search_pool', username)
+        self.redis.hset('search_pool', username, RedisServer.TIME_TO_SEARCH)
         self.redis.expire('search_pool', RedisServer.TTL)
 
     def delete_search(self, username):
-        self.redis.srem('search_pool', username)
+        self.redis.hdel('search_pool', username)
 
 
 class RoomManager:

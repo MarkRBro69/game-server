@@ -94,11 +94,17 @@ def login(request):
     return Response(data={'error': 'an error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
+@api_view(['GET, POST'])
 def get_user(request):
     token_is_valid = False
     access = request.data.get('access')
     refresh = request.data.get('refresh')
+    if access is None:
+        access = request.COOKIES.get('uat')
+
+    if refresh is None:
+        refresh = request.COOKIES.get('urt')
+
     uat = None
     urt = None
     user = None
