@@ -78,7 +78,6 @@ def login(request):
             max_age=900,
             secure=True,
             httponly=True,
-            samesite='Lax',
         )
         response.set_cookie(
             key='urt',
@@ -86,7 +85,6 @@ def login(request):
             max_age=3600 * 24,
             secure=True,
             httponly=True,
-            samesite='Lax',
         )
 
         return response
