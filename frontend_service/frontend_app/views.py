@@ -4,7 +4,6 @@ import requests
 
 from django.core.cache import cache
 from django.shortcuts import render, redirect
-from django.urls import reverse
 
 from frontend_app.utils import try_requests, token_auth
 from frontend_service.microservices.users_api import *

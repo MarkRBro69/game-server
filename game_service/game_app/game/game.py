@@ -4,7 +4,7 @@ import logging
 from enum import Enum
 from typing import Optional
 
-from game_service.utils import UsersManager
+from game_app.utils import UsersManager
 
 
 logger = logging.getLogger('game_server')

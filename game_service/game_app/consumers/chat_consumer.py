@@ -3,7 +3,7 @@ from datetime import datetime
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from game_service.utils import RedisServer, ConsumerUtils, Commands, RoomManager
+from game_app.utils import RedisServer, ConsumerUtils, Commands, RoomManager
 
 
 class GlobalConsumer(AsyncWebsocketConsumer):

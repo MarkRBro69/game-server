@@ -132,6 +132,13 @@ class RedisServer:
     def is_rooms_member(self, key, value):
         return self.redis.sismember(key, value)
 
+    def add_search(self, username):
+        self.redis.sadd('search_pool', username)
+        self.redis.expire('search_pool', RedisServer.TTL)
+
+    def delete_search(self, username):
+        self.redis.srem('search_pool', username)
+
 
 class RoomManager:
     def __init__(self):

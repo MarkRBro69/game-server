@@ -16,7 +16,7 @@ SECRET_KEY = ENV('FRONTEND_SERVICE_SECRET_KEY')
 
 DEBUG = ENV.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'frontend']
+ALLOWED_HOSTS = ['127.0.0.1', 'frontend', '*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

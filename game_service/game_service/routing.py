@@ -1,7 +1,7 @@
 from django.urls import path
 
-from game_service.consumers.chat_consumer import GlobalConsumer
-from game_service.consumers.game_consumer import GameConsumer
+from game_app.consumers.chat_consumer import GlobalConsumer
+from game_app.consumers.game_consumer import GameConsumer
 
 websocket_urlpatterns = [
     path('ws/global/<str:username>/', GlobalConsumer.as_asgi()),

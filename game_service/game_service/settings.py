@@ -16,7 +16,7 @@ SECRET_KEY = ENV('GAME_SERVICE_SECRET_KEY')
 
 DEBUG = ENV.bool('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.3', 'game']
+ALLOWED_HOSTS = ['127.0.0.3', 'game', '*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
