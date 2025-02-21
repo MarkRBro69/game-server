@@ -94,7 +94,7 @@ def login(request):
     return Response(data={'error': 'an error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET, POST'])
+@api_view(['GET', 'POST'])
 def get_user(request):
     token_is_valid = False
     access = request.data.get('access')
