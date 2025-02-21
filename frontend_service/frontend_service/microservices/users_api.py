@@ -1,4 +1,4 @@
-from game_service import settings
+from frontend_service import settings
 
 env = settings.ENV
 

@@ -127,3 +127,5 @@ CORS_ALLOWED_ORIGINS = [
     "https://frontend-production-df30.up.railway.app",
     "http://localhost:5173",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
