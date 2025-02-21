@@ -70,7 +70,26 @@ def login(request):
             'user': CustomUserSerializer(user).data,
         }
 
-        return Response(data=data, status=status.HTTP_200_OK)
+        response = Response(data=data, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            key='uat',
+            value=str(tokens.access_token),
+            max_age=900,
+            secure=True,
+            httponly=True,
+            samesite='Lax',
+        )
+        response.set_cookie(
+            key='urt',
+            value=str(tokens),
+            max_age=3600 * 24,
+            secure=True,
+            httponly=True,
+            samesite='Lax',
+        )
+
+        return response
 
     return Response(data={'error': 'an error'}, status=status.HTTP_400_BAD_REQUEST)
 
