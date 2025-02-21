@@ -118,4 +118,5 @@ CHANNEL_LAYERS = {
 
 CORS_ALLOWED_ORIGINS = [
     "https://game-production-2d31.up.railway.app",
+    "http://localhost:5173",
 ]

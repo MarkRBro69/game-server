@@ -126,4 +126,5 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "https://users-production-52dd.up.railway.app",
     "https://frontend-production-df30.up.railway.app",
+    "http://localhost:5173",
 ]
