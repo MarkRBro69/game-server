@@ -1,10 +1,14 @@
 import json
+import logging
 from datetime import datetime
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from game_app.game.game_searching import GameSearching
 from game_app.utils import RedisServer, ConsumerUtils, Commands, RoomManager
+from game_app.game.game_searching import GameSearching
+
+
+logger = logging.getLogger('game_server')
 
 
 class GlobalConsumer(AsyncWebsocketConsumer):
@@ -100,7 +104,8 @@ class GlobalConsumer(AsyncWebsocketConsumer):
                 await self.channel_layer.send(self.channel_name, message_to_send)
 
         elif Commands(command) == Commands.SEARCH:
-            self.game_searching = GameSearching(self.username, self)
+            self.game_searching = GameSearching(self.redis, self.room_manager, self.username, self)
+            logger.debug(f'Search accepted for: {self.username}')
 
     async def message(self, event):
         event_type = event['event_type']

@@ -40,6 +40,8 @@
             updateUsersList(data.users);
         } else if (data.event_type === '/invite') {
             showInviteModal(data.target_url, data.message);
+        } else if (data.event_type === '/game_match') {
+            showInviteModal(data.target_url, data.message);
         } else {
             const chatLog = document.getElementById('chat-log');
             chatLog.innerHTML += '<b>' + data.timestamp + '</b>: ' + data.username + ' - ' + data.message + '<br>';
