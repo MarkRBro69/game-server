@@ -19,6 +19,7 @@ class Commands(Enum):
     INVITE = '/invite'
     PRIVATE = '/private'
     MESSAGE = '/message'
+    SEARCH = '/search'
 
     @staticmethod
     def get_values_set():
@@ -148,6 +149,12 @@ class RedisServer:
 
     def delete_search(self, username):
         self.redis.hdel('search_pool', username)
+
+    def get_all_search(self):
+        return self.redis.hgetall('search_pool')
+
+    def decrease_tts(self, username, value):
+        self.redis.hincrby('search_pool', username, value)
 
 
 class RoomManager:

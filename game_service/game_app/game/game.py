@@ -146,6 +146,8 @@ class Game:
         self.usernames_dict: dict = {}
         self.observers: list = []
 
+        self.current_game_task = None
+
     async def set_player(self, player: Player) -> None:
         logger.debug(f'Player {player.get_username()} connected')
 
@@ -190,7 +192,14 @@ class Game:
 
             game_result = self.check_end_condition(i)
             if game_result != '':
-                #  --add to db
+                if self.current_game_task is not None:
+                    self.current_game_task.cancel()
+                    try:
+                        await self.current_game_task
+                        self.current_game_task = None
+                    except asyncio.CancelledError:
+                        pass
+
                 await self.send_game_result(game_result)
                 break
 

@@ -3,6 +3,7 @@ from datetime import datetime
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from game_app.game.game_searching import GameSearching
 from game_app.utils import RedisServer, ConsumerUtils, Commands, RoomManager
 
 
@@ -14,6 +15,7 @@ class GlobalConsumer(AsyncWebsocketConsumer):
         self.user = None
         self.redis = RedisServer()
         self.room_manager = RoomManager()
+        self.game_searching = None
 
     async def connect(self):
         self.room_group_name = 'global_lobby'
@@ -97,6 +99,9 @@ class GlobalConsumer(AsyncWebsocketConsumer):
                 await self.channel_layer.send(recipient_channel, message_to_send)
                 await self.channel_layer.send(self.channel_name, message_to_send)
 
+        elif Commands(command) == Commands.SEARCH:
+            self.game_searching = GameSearching(self.username, self)
+
     async def message(self, event):
         event_type = event['event_type']
         message = event['message']
@@ -137,6 +142,14 @@ class GlobalConsumer(AsyncWebsocketConsumer):
             'timestamp': timestamp,
             'target_url': target_url,
         }))
+
+    async def game_match(self, message):
+        data = {
+            'event_type': message['event_type'],
+            'message': message['message'],
+            'target_url': message['target_url'],
+        }
+        await self.send(text_data=json.dumps(data))
 
     async def new_user(self, event):
         event_type = event['event_type']
