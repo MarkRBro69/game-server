@@ -1,10 +1,11 @@
 import random
 
-from game_app.game.game import Actions
+from game_app.game.game import Actions, Player
 
 
-class Bot:
+class Bot(Player):
     def __init__(self):
+        super().__init__('Bot')
         self.actions_dict = {
             Actions.ATTACK: 0,
             Actions.DEFEND: 0,
@@ -12,6 +13,8 @@ class Bot:
             Actions.REST: 0,
             Actions.PASS: 0,
         }
+        self.status = None
+        self.opponent_status = None
 
     def reset_actions(self):
         self.actions_dict = {
@@ -22,27 +25,57 @@ class Bot:
             Actions.PASS: 0,
         }
 
-    def make_move(self, bot_player, human_player) -> Actions:
+    def make_move(self) -> Actions:
         self.reset_actions()
 
-        if bot_player.get('energy') < 20:
+        if self.status[1] < 20:
             return Actions.REST
 
-        if bot_player.get('energy') < 50:
+        if self.status[1] < 50:
             self.actions_dict[Actions.REST] += 1
 
-        if bot_player.get('energy') > human_player.get('energy'):
+        if self.status[1] > self.opponent_status[1]:
             self.actions_dict[Actions.ATTACK] += 1
 
-        if bot_player.get('hp') > human_player.get('hp'):
+        if self.status[0] > self.opponent_status[0]:
             self.actions_dict[Actions.FEINT] += 1
 
-        if bot_player.get('hp') < human_player.get('hp'):
+        if self.status[0] < self.opponent_status[0]:
             self.actions_dict[Actions.DEFEND] += 1
 
+        if all(action not in self.opponent_status[2] for action in ('attack', 'defend')):
+            self.actions_dict[Actions.DEFEND] = 0
+            self.actions_dict[Actions.FEINT] = 0
+
         actions_list = []
-        for key, value in self.actions_dict:
+        for key, value in self.actions_dict.items():
             for i in range(value):
                 actions_list.append(key)
 
         return random.choice(actions_list)
+
+    async def send_start(self, message):
+        if message['p1_username'] == 'Bot':
+            self.status = message['p1_status']
+            self.opponent_status = message['p2_status']
+        else:
+            self.status = message['p2_status']
+            self.opponent_status = message['p1_status']
+
+        self.set_action(self.make_move())
+
+    async def send_turn(self, message):
+        if message['p1_username'] == 'Bot':
+            self.status = message['p1_status']
+            self.opponent_status = message['p2_status']
+        else:
+            self.status = message['p2_status']
+            self.opponent_status = message['p1_status']
+
+        self.set_action(self.make_move())
+
+    async def send_timer(self, timer):
+        pass
+
+    async def send_game_result(self, game_result):
+        pass

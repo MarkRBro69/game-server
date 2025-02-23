@@ -1,6 +1,9 @@
 import asyncio
 import logging
 
+from game_app.game.ai_logic import Bot
+from game_app.game.game import GameHandler
+
 logger = logging.getLogger('game_server')
 
 
@@ -55,11 +58,23 @@ class GameSearching:
 
         GameSearching.LOOP_TASK = asyncio.create_task(self.check_loop())
 
+    @staticmethod
+    async def end_loop():
+        if GameSearching.LOOP_TASK:
+            GameSearching.LOOP_TASK.cancel()
+            try:
+                await GameSearching.LOOP_TASK
+            except asyncio.CancelledError:
+                pass
+
     async def check_match(self):
         searching_users = self.redis.get_all_search()
 
         logger.debug(f'Checking match, searching players:'
                      f'{searching_users}')
+
+        if not searching_users:
+            await self.end_loop()
 
         match_dict = {}
         for username, time_to_search in searching_users.items():
@@ -73,13 +88,16 @@ class GameSearching:
                 match_dict = {}
 
         if len(match_dict) == 1:
-            username, time_to_search = match_dict.popitem()
+            username, time_to_search = next(iter(match_dict.items()))
             time_to_search = int(time_to_search) - GameSearching.TIMEOUT
             if time_to_search > 0:
                 self.redis.decrease_tts(username, -GameSearching.TIMEOUT)
             else:
-                pass
-                # self.send_invites(match_dict)
+                match_dict['Bot'] = 0
+                await self.send_invites(match_dict)
+                match_dict = {}
+
+            logger.debug(f'Match dict: {match_dict}')
 
         logger.debug('End check match')
 
@@ -98,9 +116,15 @@ class GameSearching:
         logger.debug(message)
 
         for user in usernames:
-            await GameSearching.OBSERVERS[user].game_match(message)
-            GameSearching.OBSERVERS.pop(user)
-            self.redis.delete_search(user)
+            if user == 'Bot':
+                new_bot = Bot()
+                game = GameHandler.get_or_add(room_token)
+                game.set_observer(new_bot)
+                await game.set_player(new_bot)
+            else:
+                await GameSearching.OBSERVERS[user].game_match(message)
+                GameSearching.OBSERVERS.pop(user)
+                self.redis.delete_search(user)
 
 
 
