@@ -84,7 +84,7 @@ def login(request):
                 secure=True,
                 httponly=True,
                 samesite='None',
-                domain='.railway.app',
+                domain='railway.app',
                 path='/',
             )
             response.set_cookie(
@@ -94,7 +94,7 @@ def login(request):
                 secure=True,
                 httponly=True,
                 samesite='None',
-                domain='.railway.app',
+                domain='railway.app',
                 path='/',
             )
             return response

@@ -75,7 +75,7 @@ def token_auth(func):
                     secure=True,
                     httponly=True,
                     samesite='None',
-                    domain='.railway.app',
+                    domain='railway.app',
                     path='/',
                 )
             if urt:
@@ -86,7 +86,7 @@ def token_auth(func):
                     secure=True,
                     httponly=True,
                     samesite='None',
-                    domain='.railway.app',
+                    domain='railway.app',
                     path='/',
                 )
         return result
