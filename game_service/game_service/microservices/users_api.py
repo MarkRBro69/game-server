@@ -17,6 +17,7 @@ USERS_CHANGE_RATING = 'change_rating/'
 USERS_GET_RATING = 'get_rating/'
 USERS_GET_PROFILE = 'get_profile/'
 USERS_GET_USER = 'get_user/'
+USERS_CREATE_CHARACTER = 'create_character/'
 
 RUNNING = env('RUNNING')
 if RUNNING == 'railway':
@@ -77,3 +78,7 @@ def get_users_get_profile_url():
 
 def get_users_get_user_url():
     return f'{USERS_API}{USERS_GET_USER}'
+
+
+def get_users_create_character_url():
+    return f'{USERS_API}{USERS_CREATE_CHARACTER}'

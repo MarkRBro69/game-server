@@ -120,7 +120,7 @@ class GameSearching:
                 new_bot = Bot()
                 game = GameHandler.get_or_add(room_token)
                 game.set_observer(new_bot)
-                await game.set_player(new_bot)
+                await game.set_character(new_bot)
             else:
                 await GameSearching.OBSERVERS[user].game_match(message)
                 GameSearching.OBSERVERS.pop(user)

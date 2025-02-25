@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 
-from users_app.models import CustomUserModel
+from users_app.models import CustomUserModel, CharacterModel
 
 
 class UserService:
@@ -39,25 +40,14 @@ class UserService:
             raise Exception(f"An unexpected error occurred: {str(e)}")
 
     @staticmethod
-    def add_win():
-        pass
+    def get_character_by_name(username, char_name):
+        characters = CharacterService.get_user_characters(username)
+        character = get_object_or_404(characters, name=char_name)
+        return character
 
-    @staticmethod
-    def add_loss():
-        pass
 
+class CharacterService:
     @staticmethod
-    def add_draw():
-        pass
-
-    @staticmethod
-    def change_rating(rating):
-        pass
-
-    @staticmethod
-    def get_rating():
-        pass
-
-    @staticmethod
-    def get_profile():
-        pass
+    def get_user_characters(username):
+        characters_query = CharacterModel.objects.select_related('owner').filter(owner__username=username)
+        return characters_query

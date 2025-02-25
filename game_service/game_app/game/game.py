@@ -19,29 +19,26 @@ class Actions(Enum):
 
 
 class Interactions:
-    ATTACK_DAMAGE = 10
-    ENERGY_COST = 20
-    FAIL_MULTIPLY = 2
-    ENERGY_PER_TURN = 10
+    MULTIPLY = 2
 
     INTERACTIONS = {
-        (Actions.ATTACK, Actions.ATTACK): (-ATTACK_DAMAGE, -ENERGY_COST, False, -ATTACK_DAMAGE, -ENERGY_COST, False),
-        (Actions.ATTACK, Actions.DEFEND): (0, -ENERGY_COST * FAIL_MULTIPLY, True, 0, -ENERGY_COST, False),
-        (Actions.ATTACK, Actions.FEINT): (0, -ENERGY_COST, False, -ATTACK_DAMAGE, 0, False),
-        (Actions.ATTACK, Actions.REST): (0, -ENERGY_COST, False, -ATTACK_DAMAGE, ENERGY_COST, False),
-        (Actions.ATTACK, Actions.PASS): (0, -ENERGY_COST, False, -ATTACK_DAMAGE, 0, False),
+        (Actions.ATTACK, Actions.ATTACK): (-1, -1, False, -1, -1, False),
+        (Actions.ATTACK, Actions.DEFEND): (0, -1 * MULTIPLY, True, 0, -1, False),
+        (Actions.ATTACK, Actions.FEINT): (0, -1, False, -1, 0, False),
+        (Actions.ATTACK, Actions.REST): (0, -1, False, -1, 1, False),
+        (Actions.ATTACK, Actions.PASS): (0, -1, False, -1, 0, False),
 
         (Actions.DEFEND, Actions.DEFEND): (0, 0, False, 0, 0, False),
-        (Actions.DEFEND, Actions.FEINT): (0, -ENERGY_COST * FAIL_MULTIPLY, True, 0, 0, False),
-        (Actions.DEFEND, Actions.REST): (0, 0, False, 0, ENERGY_COST, False),
+        (Actions.DEFEND, Actions.FEINT): (0, -1 * MULTIPLY, True, 0, 0, False),
+        (Actions.DEFEND, Actions.REST): (0, 0, False, 0, 1, False),
         (Actions.DEFEND, Actions.PASS): (0, 0, False, 0, 0, False),
 
         (Actions.FEINT, Actions.FEINT): (0, 0, False, 0, 0, False),
-        (Actions.FEINT, Actions.REST): (0, 0, False, 0, ENERGY_COST, False),
+        (Actions.FEINT, Actions.REST): (0, 0, False, 0, 1, False),
         (Actions.FEINT, Actions.PASS): (0, 0, False, 0, 0, False),
 
-        (Actions.REST, Actions.REST): (0, ENERGY_COST, False, 0, ENERGY_COST, False),
-        (Actions.REST, Actions.PASS): (0, ENERGY_COST, False, 0, 0, False),
+        (Actions.REST, Actions.REST): (0, 1, False, 0, 1, False),
+        (Actions.REST, Actions.PASS): (0, 1, False, 0, 0, False),
 
         (Actions.PASS, Actions.PASS): (0, 0, False, 0, 0, False),
     }
@@ -58,11 +55,25 @@ class Interactions:
             raise ValueError('Interaction is not allowed')
 
 
-class Player:
-    def __init__(self, username: str) -> None:
-        self.username: str = username
-        self.health: int = 100
-        self.energy: int = 100
+class Character:
+    hp_per_endurance = 20
+    en_per_stamina = 20
+    dmg_per_strength = 4
+    be_per_stamina = 2
+    ae_per_stamina = 8
+
+    def __init__(self, character: dict) -> None:
+        self.MAX_ENERGY: int = character.get('stamina') * Character.en_per_stamina
+        self.OWNER_USERNAME: str = character.get('owner')
+
+        self.name: str = character.get('name')
+        self.health: int = character.get('endurance') * Character.hp_per_endurance
+        self.energy: int = self.MAX_ENERGY
+        self.damage: int = character.get('strength') * Character.dmg_per_strength
+        self.epa: int = 100 / character.get('agility')  # Energy per action
+        self.ber: int = character.get('stamina') * Character.be_per_stamina  # Base energy recharge
+        self.aer: int = character.get('stamina') * Character.ae_per_stamina  # Active energy recharge
+
         self.skip_turn: bool = False
         self.is_dead: bool = False
 
@@ -72,7 +83,7 @@ class Player:
         self.ready_to_act: bool = False
 
     def set_action(self, action: Actions):
-        logger.debug(f'{self.username} selected: {action}')
+        logger.debug(f'{self.name} selected: {action}')
 
         self.current_action = Actions(action)
         self.ready_to_act = True
@@ -86,8 +97,8 @@ class Player:
     def get_last_action(self) -> str:
         return self.last_action.value
 
-    def get_username(self) -> str:
-        return self.username
+    def get_name(self) -> str:
+        return self.name
 
     def change_health(self, amount: int) -> None:
         self.health += amount
@@ -98,8 +109,8 @@ class Player:
     def change_energy(self, amount: int) -> None:
         self.energy += amount
 
-        if self.energy > 100:
-            self.energy = 100
+        if self.energy > self.MAX_ENERGY:
+            self.energy = self.MAX_ENERGY
 
         if self.energy < 0:
             self.energy = 0
@@ -118,7 +129,7 @@ class Player:
         else:
             self.available_actions = set(Actions)
             self.available_actions.remove(Actions.PASS)
-            if self.energy < Interactions.ENERGY_COST:
+            if self.energy < self.epa:
                 self.available_actions.remove(Actions.ATTACK)
                 self.available_actions.remove(Actions.DEFEND)
 
@@ -139,38 +150,38 @@ class Game:
     RATING_PER_GAME = 25
 
     def __init__(self) -> None:
-        self.players: dict[int, Optional[Player]] = {1: None, 2: None}
+        self.characters: dict[int, Optional[Character]] = {1: None, 2: None}
         self.turn_number = 0
         self.game_started: bool = False
 
-        self.usernames_dict: dict = {}
+        self.names_dict: dict = {}
         self.observers: list = []
 
         self.current_game_task = None
 
-    async def set_player(self, player: Player) -> None:
-        logger.debug(f'Player {player.get_username()} connected')
+    async def set_character(self, character: Character) -> None:
+        logger.debug(f'PLayer {character.OWNER_USERNAME} connected with: Character {character.get_name()}')
 
-        if self.players[1] is None:
-            self.players[1] = player
+        if self.characters[1] is None:
+            self.characters[1] = character
         else:
-            self.players[2] = player
+            self.characters[2] = character
 
-        self.usernames_dict[player.get_username()] = player
+        self.names_dict[character.get_name()] = character
 
-        if all(self.players.values()) and not self.game_started:
+        if all(self.characters.values()) and not self.game_started:
             await self.send_start()
             self.game_started = True
             asyncio.create_task(self.start())
 
-    def get_player_by_username(self, username):
-        return self.usernames_dict[username]
+    def get_character_by_name(self, name):
+        return self.names_dict[name]
 
     def get_status(self):
-        return self.players[1].get_status(), self.players[2].get_status()
+        return self.characters[1].get_status(), self.characters[2].get_status()
 
     def turn_ready(self) -> bool:
-        return all(player.ready_to_act for player in self.players.values())
+        return all(player.ready_to_act for player in self.characters.values())
 
     async def start(self) -> None:
         for i in range(Game.MAX_TURNS):
@@ -204,52 +215,66 @@ class Game:
                 break
 
     def turn(self) -> str:
-        for player in self.players.values():
-            player.change_skip(False)
+        for character in self.characters.values():
+            character.change_skip(False)
 
-        p1_action = self.players[1].get_action()
-        p2_action = self.players[2].get_action()
+        p1_action = self.characters[1].get_action()
+        p2_action = self.characters[2].get_action()
 
         h1_change, e1_change, p1_skip, h2_change, e2_change, p2_skip = (
             Interactions.parse_actions(p1_action, p2_action)
         )
 
-        self.players[1].turn(h1_change, e1_change, p1_skip)
-        self.players[2].turn(h2_change, e2_change, p2_skip)
+        h1_change *= self.characters[2].damage
+        if e1_change < 0:
+            e1_change = e1_change * self.characters[1].epa + self.characters[1].ber
+        else:
+            e1_change = e1_change * self.characters[1].aer + self.characters[1].ber
+
+        h2_change *= self.characters[1].damage
+        if e2_change < 0:
+            e2_change = e2_change * self.characters[2].epa + self.characters[2].ber
+        else:
+            e2_change = e2_change * self.characters[2].aer + self.characters[2].ber
+
+        self.characters[1].turn(h1_change, e1_change, p1_skip)
+        self.characters[2].turn(h2_change, e2_change, p2_skip)
 
         game_message = (
             f'Turn: {self.turn_number}:\n'
-            f'{self.players[1].get_username()}: {p1_action.value}\n'
-            f'{self.players[2].get_username()}: {p2_action.value}'
+            f'{self.characters[1].get_name()}: {p1_action.value}\n'
+            f'{self.characters[2].get_name()}: {p2_action.value}'
         )
 
         return game_message
 
     def check_end_condition(self, turn_number: int) -> str:
-        p1_username = self.players[1].get_username()
-        p2_username = self.players[2].get_username()
+        c1_name = self.characters[1].get_name()
+        c2_name = self.characters[2].get_name()
 
-        if self.players[1].is_dead and self.players[2].is_dead:
-            UsersManager.add_draw(p1_username)
-            UsersManager.add_draw(p2_username)
+        if self.characters[1].is_dead and self.characters[2].is_dead:
+            UsersManager.add_draw(c1_name)
+            UsersManager.add_draw(c2_name)
             return 'draw'
-        if self.players[1].is_dead:
-            UsersManager.add_loss(p1_username)
-            UsersManager.change_rating(p1_username, -self.RATING_PER_GAME)
+        if self.characters[1].is_dead:
+            UsersManager.add_loss(c1_name)
+            UsersManager.change_rating(c1_name, -self.RATING_PER_GAME)
 
-            UsersManager.add_win(p2_username)
-            UsersManager.change_rating(p2_username, self.RATING_PER_GAME)
-            return 'p2 win'
-        if self.players[2].is_dead:
-            UsersManager.add_win(p1_username)
-            UsersManager.change_rating(p1_username, self.RATING_PER_GAME)
+            UsersManager.add_win(c2_name)
+            UsersManager.change_rating(c2_name, self.RATING_PER_GAME)
+            return f'{self.characters[2].OWNER_USERNAME} win'
 
-            UsersManager.add_loss(p2_username)
-            UsersManager.change_rating(p2_username, -self.RATING_PER_GAME)
-            return 'p1 win'
+        if self.characters[2].is_dead:
+            UsersManager.add_win(c1_name)
+            UsersManager.change_rating(c1_name, self.RATING_PER_GAME)
+
+            UsersManager.add_loss(c2_name)
+            UsersManager.change_rating(c2_name, -self.RATING_PER_GAME)
+            return f'{self.characters[1].OWNER_USERNAME} win'
+
         if turn_number == Game.MAX_TURNS - 1:
-            UsersManager.add_draw(p1_username)
-            UsersManager.add_draw(p2_username)
+            UsersManager.add_draw(c1_name)
+            UsersManager.add_draw(c2_name)
             return 'draw'
         return ''
 
@@ -262,10 +287,10 @@ class Game:
     async def send_start(self) -> None:
         message = {
             'message': 'game started',
-            'p1_username': self.players[1].get_username(),
-            'p1_status': self.players[1].get_status(),
-            'p2_username': self.players[2].get_username(),
-            'p2_status': self.players[2].get_status(),
+            'p1_username': self.characters[1].get_name(),
+            'p1_status': self.characters[1].get_status(),
+            'p2_username': self.characters[2].get_name(),
+            'p2_status': self.characters[2].get_status(),
         }
 
         for observer in self.observers:
@@ -274,12 +299,12 @@ class Game:
     async def send_turn(self, game_message) -> None:
         message = {
             'message': game_message,
-            'p1_username': self.players[1].get_username(),
-            'p1_status': self.players[1].get_status(),
-            'p1_action': self.players[1].get_last_action(),
-            'p2_username': self.players[2].get_username(),
-            'p2_status': self.players[2].get_status(),
-            'p2_action': self.players[2].get_last_action(),
+            'p1_username': self.characters[1].get_name(),
+            'p1_status': self.characters[1].get_status(),
+            'p1_action': self.characters[1].get_last_action(),
+            'p2_username': self.characters[2].get_name(),
+            'p2_status': self.characters[2].get_status(),
+            'p2_action': self.characters[2].get_last_action(),
         }
 
         for observer in self.observers:

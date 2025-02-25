@@ -51,3 +51,31 @@ class CustomUserModel(AbstractBaseUser):
         In this case, it's the username of the user.
         """
         return self.username
+
+
+class CharacterType(models.TextChoices):
+    HUMAN = 'Human'
+    ORC = 'Orc'
+    ELF = 'Elf'
+    DWARF = 'Dwarf'
+
+
+class CharacterModel(models.Model):
+    owner = models.ForeignKey(CustomUserModel, on_delete=models.CASCADE, related_name='characters')
+    char_type = models.CharField(
+        max_length=20,
+        choices=CharacterType.choices,
+        blank=False,
+        null=False,
+    )
+    name = models.CharField(max_length=40, blank=False, null=False, db_index=True, unique=True)
+    strength = models.IntegerField(blank=False, null=False)
+    agility = models.IntegerField(blank=False, null=False)
+    stamina = models.IntegerField(blank=False, null=False)
+    endurance = models.IntegerField(blank=False, null=False)
+
+    objects = models.Manager()
+
+    def __str__(self):
+        return self.name
+

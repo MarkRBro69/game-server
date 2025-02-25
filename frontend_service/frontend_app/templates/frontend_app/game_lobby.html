@@ -49,7 +49,7 @@
 <script>
     const username = '{{ user.username|escapejs }}';
     const room_token = '{{ room_token|escapejs }}';
-    const socket = new WebSocket(`ws://127.0.0.3:8003/ws/game/${room_token}/${username}/`);
+    const socket = new WebSocket(`ws://127.0.0.3:8003/ws/game/${room_token}/${username}/Hannibal/`);
 
     const timer = document.getElementById('timer');
 

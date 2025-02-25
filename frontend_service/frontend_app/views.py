@@ -3,6 +3,7 @@ import logging
 import requests
 
 from django.core.cache import cache
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 
 from frontend_app.utils import try_requests, token_auth
@@ -82,7 +83,9 @@ def login(request):
                 max_age=900,
                 secure=True,
                 httponly=True,
-                samesite='Lax',
+                samesite='None',
+                domain='.railway.app',
+                path='/',
             )
             response.set_cookie(
                 key='urt',
@@ -90,7 +93,9 @@ def login(request):
                 max_age=3600 * 24,
                 secure=True,
                 httponly=True,
-                samesite='Lax',
+                samesite='None',
+                domain='.railway.app',
+                path='/',
             )
             return response
 
@@ -171,3 +176,41 @@ def game_lobby(request, room_token, user=None):
         context['room_token'] = room_token
         response = render(request, 'frontend_app/game_lobby.html', context)
         return response
+
+
+@token_auth
+def create_character(request, user=None):
+    context = {
+        'title': 'Create Character',
+    }
+    if request.method == 'GET':
+        context['user'] = user
+        response = render(request, 'frontend_app/create_character.html', context)
+        return response
+
+    if request.method == 'POST':
+        # Extract form data from request.POST
+        name = request.POST.get('name')
+        char_type = request.POST.get('char_type')
+        strength = request.POST.get('strength')
+        agility = request.POST.get('agility')
+        stamina = request.POST.get('stamina')
+        endurance = request.POST.get('endurance')
+
+        character_data = {
+            'name': name,
+            'char_type': char_type,
+            'strength': strength,
+            'agility': agility,
+            'stamina': stamina,
+            'endurance': endurance,
+        }
+
+        char_response = try_requests(
+            requests.post,
+            get_users_create_character_url(),
+            data=character_data,
+            cookies=request.COOKIES,
+        )
+        response = char_response.get('response')
+        return HttpResponse(response.text)

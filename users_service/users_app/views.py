@@ -9,9 +9,10 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
-from users_app.models import CustomUserModel
-from users_app.serializers import CustomUserSerializer
-from users_app.services import UserService
+from users_app.models import CustomUserModel, CharacterModel
+from users_app.serializers import CustomUserSerializer, CharacterSerializer
+from users_app.services import UserService, CharacterService
+from users_app.utils import get_auth_user
 
 logger = logging.getLogger('game_server')
 
@@ -209,3 +210,51 @@ def get_profile(request):
         'profile': serialized_users.data,
     }
     return Response(data=data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@get_auth_user
+def create_character(request, user):
+    serialized_character = CharacterSerializer(data=request.data)
+    if serialized_character.is_valid():
+        username = user.get('username')
+        user = get_object_or_404(CustomUserModel, username=username)
+        serialized_character.validated_data['owner'] = user
+        serialized_character.save()
+        return Response(serialized_character.data, status=status.HTTP_201_CREATED)
+    return Response(serialized_character.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+def delete_character(request, character_name):
+    character = get_object_or_404(CharacterModel, name=character_name)
+    character.delete()
+    data = {
+        'message': f'Character: {character_name}, deleted.'
+    }
+    return Response(data=data, status=status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+def update_character(request):
+    serialized_character = CharacterSerializer(data=request.data)
+    if serialized_character.is_valid():
+        serialized_character.save()
+        return Response(serialized_character.data, status=status.HTTP_201_CREATED)
+    return Response(serialized_character.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def get_user_characters(request, username):
+    characters_query = CharacterService.get_user_characters(username)
+    serialized_characters = CharacterSerializer(characters_query, many=True)
+    return Response(serialized_characters.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@get_auth_user
+def get_user_char_by_name(request, char_name, user=None):
+    character = UserService.get_character_by_name(user.get('username'), char_name)
+    serialized_char = CharacterSerializer(character)
+    response = Response(serialized_char.data, status=status.HTTP_200_OK)
+    return response

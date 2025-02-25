@@ -1,9 +1,9 @@
 import random
 
-from game_app.game.game import Actions, Player
+from game_app.game.game import Actions, Character
 
 
-class Bot(Player):
+class Bot(Character):
     def __init__(self):
         super().__init__('Bot')
         self.actions_dict = {

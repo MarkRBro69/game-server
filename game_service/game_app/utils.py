@@ -201,3 +201,4 @@ class UsersManager:
             'rating': rating,
         }
         requests.patch(url, data=data)
+

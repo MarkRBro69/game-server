@@ -4,11 +4,11 @@ from django.core.cache import cache
 from frontend_service.microservices.users_api import get_users_get_user_url
 
 
-def try_requests(method, url, data=None, headers=None, timeout=5):
+def try_requests(method, url, data=None, headers=None, cookies=None,  timeout=5):
     context = {}
     response = None
     try:
-        response = method(url, data=data, headers=headers, timeout=timeout)
+        response = method(url, data=data, headers=headers, cookies=cookies, timeout=timeout)
         response.raise_for_status()
         context['status'] = response.status_code
         context['response'] = response
@@ -74,7 +74,9 @@ def token_auth(func):
                     max_age=900,
                     secure=True,
                     httponly=True,
-                    samesite='Lax',
+                    samesite='None',
+                    domain='.railway.app',
+                    path='/',
                 )
             if urt:
                 result.set_cookie(
@@ -83,7 +85,9 @@ def token_auth(func):
                     max_age=3600 * 24,
                     secure=True,
                     httponly=True,
-                    samesite='Lax',
+                    samesite='None',
+                    domain='.railway.app',
+                    path='/',
                 )
         return result
     return wrapper

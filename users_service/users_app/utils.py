@@ -1,63 +1,80 @@
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-from django.core.validators import EmailValidator
+import logging
+
+from rest_framework.generics import get_object_or_404
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
+from users_app.models import CustomUserModel
+from users_app.serializers import CustomUserSerializer
 
 
-def validate_user_data(manager, user_data):
-    """
-    Validate user data for creating or updating a user.
+logger = logging.getLogger('game_server')
 
-    Args:
-        manager (BaseManager): A manager instance (e.g., User.objects) used to query the database for validation.
-        user_data (dict): Dictionary containing the following keys:
-            - 'username': Required, must be unique.
-            - 'email': Required, must be a valid email format and unique.
-            - 'password1': Required, must meet password validation requirements.
-            - 'password2': Required, must match 'password1'.
 
-    Returns:
-        dict: A dictionary of validation errors. Keys represent field names, and values are error messages.
-        If no errors are found, the dictionary is empty.
+def get_auth_user(func):
+    def wrapper(*args, **kwargs):
+        request = args[0]
 
-    Example:
-        errors = validate_user_data(User.objects, user_data)
-        if errors:
-            raise ValidationError(errors)
-    """
+        response = None
+        token_is_valid = False
 
-    errors = {}
+        access = request.data.get('access')
+        refresh = request.data.get('refresh')
 
-    # Validate username
-    if not user_data.get('username'):
-        errors['username'] = 'Username is required'
-    elif manager.filter(username=user_data['username']).exists():
-        errors['username'] = 'Username is already taken'
+        logger.debug(f'Access: {access}')
+        logger.debug(f'Refresh: {refresh}')
 
-    # Validate email
-    if not user_data.get('email'):
-        errors['email'] = 'Email is required'
-    else:
-        try:
-            EmailValidator()(user_data['email'])
-        except ValidationError:
-            errors['email'] = 'Invalid email format'
+        if access is None:
+            access = request.COOKIES.get('uat')
+            logger.debug(f'Access: {access}')
 
-        if manager.filter(email=user_data['email']).exists():
-            errors['email'] = 'Email is already registered'
+        if refresh is None:
+            refresh = request.COOKIES.get('urt')
+            logger.debug(f'Refresh: {refresh}')
 
-    # Validate password1
-    if not user_data.get('password1'):
-        errors['password1'] = 'Password is required'
-    else:
-        try:
-            validate_password(user_data['password1'])
-        except ValidationError as e:
-            errors['password1'] = e.messages
+        uat = None
+        urt = None
+        user = None
 
-    # Validate password2 (confirmation)
-    if not user_data.get('password2'):
-        errors['password2'] = 'Password confirmation is required'
-    elif user_data.get('password1') != user_data.get('password2'):
-        errors['password2'] = 'Passwords do not match'
+        if access:
+            try:
+                user_data = AccessToken(access)
+                user = get_object_or_404(CustomUserModel, pk=user_data.get('user_id'))
+                token_is_valid = True
 
-    return errors
+            except TokenError:
+                token_is_valid = False
+
+        if not token_is_valid and refresh:
+            user_data = RefreshToken(refresh)
+            user = get_object_or_404(CustomUserModel, pk=user_data.get('user_id'))
+            new_refresh = RefreshToken.for_user(user)
+            uat = str(new_refresh.access_token)
+            urt = str(new_refresh)
+
+        if user:
+            serialized_user = CustomUserSerializer(user, many=False)
+            response = func(*args, **kwargs, user=serialized_user.data)
+
+        if uat:
+            response.set_cookie(
+                key='uat',
+                value=uat,
+                max_age=900,
+                secure=True,
+                httponly=True,
+                samesite='None',
+            )
+
+        if urt:
+            response.set_cookie(
+                key='urt',
+                value=urt,
+                max_age=3600 * 24,
+                secure=True,
+                httponly=True,
+                sameite='None',
+            )
+
+        return response
+    return wrapper
