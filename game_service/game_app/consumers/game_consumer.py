@@ -5,7 +5,8 @@ import requests
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from game_app.game.game import GameHandler, Character
-
+from game_app.utils import RedisServer
+from game_service.microservices.users_api import *
 
 logger = logging.getLogger('game_server')
 
@@ -19,6 +20,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.user = None
         self.character = None
         self.character_name = None
+        self.token = None
+        self.redis = RedisServer()
 
     async def connect(self):
         self.room_token = self.scope['url_route']['kwargs']['room_token']
@@ -30,6 +33,19 @@ class GameConsumer(AsyncWebsocketConsumer):
             'email': '',
         }
         self.character_name = self.scope['url_route']['kwargs']['char_name']
+        self.token = self.scope['url_route']['kwargs']['token']
+        logger.debug(f'Token: {self.token}')
+        stored_username = self.redis.get_player_by_token(self.token)
+        stored_username = stored_username.decode("utf-8")
+        logger.debug(f'Stored name: {stored_username}')
+        if stored_username == self.username:
+            characters = requests.get(f'{get_users_user_characters_url()}{self.username}').json()
+            for char in characters:
+                if char.get('name') == self.character_name:
+                    self.character = Character(char)
+                    break
+        else:
+            return
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -44,15 +60,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'message': f'{self.username} connected to game',
             }
         )
-
-        headers = dict(self.scope["headers"])
-        logger.debug(headers)
-        cookie_value = None
-        for key, value in headers.items():
-            if key == b"cookie":
-                cookies_dict = dict(item.split("=") for item in value.decode().split("; "))
-                cookie_value = cookies_dict.get("uat", "Not Found")
-        logger.debug(cookie_value)
 
         game = GameHandler.get_or_add(self.room_token)
         game.set_observer(self)
@@ -71,7 +78,6 @@ class GameConsumer(AsyncWebsocketConsumer):
             data = json.dumps(data_dict)
             await self.send(text_data=data)
         else:
-            self.character = requests.get()
             await game.set_character(self.character)
 
     async def disconnect(self, close_code):

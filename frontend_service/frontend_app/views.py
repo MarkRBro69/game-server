@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 
 from frontend_app.utils import try_requests, token_auth
-from frontend_service.microservices.game_api import get_global_lobby_url
+from frontend_service.microservices.game_api import *
 from frontend_service.microservices.users_api import *
 
 
@@ -84,8 +84,6 @@ def login(request):
                 secure=True,
                 httponly=True,
                 samesite='None',
-                domain='railway.app',
-                path='/',
             )
             response.set_cookie(
                 key='urt',
@@ -94,8 +92,6 @@ def login(request):
                 secure=True,
                 httponly=True,
                 samesite='None',
-                domain='railway.app',
-                path='/',
             )
             return response
 
@@ -174,6 +170,8 @@ def game_lobby(request, room_token, user=None):
     if request.method == 'GET':
         context['user'] = user
         context['room_token'] = room_token
+        context['token'] = requests.get(get_game_auth_token_url(), cookies=request.COOKIES).json().get('token')
+        logger.debug(f'Token: {context['token']}')
         response = render(request, 'frontend_app/game_lobby.html', context)
         return response
 

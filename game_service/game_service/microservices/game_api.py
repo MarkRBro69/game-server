@@ -1,4 +1,4 @@
-from django.conf import settings
+from game_service import settings
 
 env = settings.ENV
 
@@ -12,6 +12,8 @@ GAME_WS_VERSION = 'ws/'
 
 GAME_GLOBAL = 'global/'
 GAME_LOBBY = 'game/'
+
+GAME_AUTH_TOKEN = 'get_auth_token/'
 
 RUNNING = env('RUNNING')
 if RUNNING == 'railway':
@@ -63,3 +65,7 @@ def get_global_lobby_url():
 
 def get_game_lobby_url():
     return f'{GAME_WS}{GAME_LOBBY}'
+
+
+def get_game_auth_token_url():
+    return f'{GAME_API}{GAME_AUTH_TOKEN}'

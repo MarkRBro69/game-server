@@ -75,8 +75,6 @@ def token_auth(func):
                     secure=True,
                     httponly=True,
                     samesite='None',
-                    domain='railway.app',
-                    path='/',
                 )
             if urt:
                 result.set_cookie(
@@ -86,8 +84,6 @@ def token_auth(func):
                     secure=True,
                     httponly=True,
                     samesite='None',
-                    domain='railway.app',
-                    path='/',
                 )
         return result
     return wrapper

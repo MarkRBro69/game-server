@@ -64,6 +64,7 @@ class GameSearching:
             GameSearching.LOOP_TASK.cancel()
             try:
                 await GameSearching.LOOP_TASK
+                GameSearching.LOOP_TASK = None
             except asyncio.CancelledError:
                 pass
 

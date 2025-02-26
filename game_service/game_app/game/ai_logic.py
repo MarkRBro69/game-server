@@ -2,10 +2,19 @@ import random
 
 from game_app.game.game import Actions, Character
 
+bot_dict = {
+    'name': 'Bot',
+    'owner': 'Bot',
+    'strength': 5,
+    'agility': 5,
+    'stamina': 5,
+    'endurance': 5,
+}
+
 
 class Bot(Character):
     def __init__(self):
-        super().__init__('Bot')
+        super().__init__(bot_dict)
         self.actions_dict = {
             Actions.ATTACK: 0,
             Actions.DEFEND: 0,
