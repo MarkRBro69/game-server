@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from users_app.models import CustomUserModel, CharacterModel
 from users_app.serializers import CustomUserSerializer, CharacterSerializer
 from users_app.services import UserService, CharacterService
-from users_app.utils import get_auth_user
+from users_app.utils import get_auth_user, auth_service
 
 logger = logging.getLogger('game_server')
 
@@ -60,31 +60,56 @@ def register_user(request):
 
 @api_view(['POST'])
 def login(request):
+    """
+    Authenticates a user and returns JWT tokens in both the response body and cookies.
+
+    This view expects a JSON request body containing 'username' and 'password'.
+    If authentication is successful, it returns:
+    - An access token and a refresh token in the response body.
+    - The same tokens as HTTP-only cookies for enhanced security.
+
+    The access token ('uat') expires in 15 minutes, while the refresh token ('urt') expires in 24 hours.
+
+    Args:
+        request (Request): The HTTP request containing user credentials.
+
+    Returns:
+        Response: JSON response with JWT tokens and user data if authentication is successful.
+                  Tokens are also set in HTTP-only cookies.
+                  If authentication fails, returns an error response with status 400.
+    """
+    # Extracting username and password from request data
     username = request.data.get('username')
     password = request.data.get('password')
+
+    # Authenticating user
     user = authenticate(username=username, password=password)
+
     if user:
+        # Generating JWT tokens
         tokens = RefreshToken.for_user(user)
         data = {
-            'access': str(tokens.access_token),
-            'refresh': str(tokens),
-            'user': CustomUserSerializer(user).data,
+            'access': str(tokens.access_token),  # Access token for authentication
+            'refresh': str(tokens),  # Refresh token for obtaining new access tokens
+            'user': CustomUserSerializer(user).data,  # Serialized user data
         }
 
+        # Creating response with tokens and user data
         response = Response(data=data, status=status.HTTP_200_OK)
 
+        # Setting HTTP-only cookies for tokens
         response.set_cookie(
-            key='uat',
+            key='uat',  # Access token cookie
             value=str(tokens.access_token),
-            max_age=900,
-            secure=True,
-            httponly=True,
-            samesite='None',
+            max_age=900,  # 15 minutes expiration
+            secure=True,  # Secure cookie (HTTPS required)
+            httponly=True,  # JavaScript cannot access this cookie
+            samesite='None',  # Cross-site requests allowed
         )
         response.set_cookie(
-            key='urt',
+            key='urt',  # Refresh token cookie
             value=str(tokens),
-            max_age=3600 * 24,
+            max_age=3600 * 24,  # 24 hours expiration
             secure=True,
             httponly=True,
             samesite='None',
@@ -92,56 +117,94 @@ def login(request):
 
         return response
 
-    return Response(data={'error': 'an error'}, status=status.HTTP_400_BAD_REQUEST)
+    # Returning an error response if authentication fails
+    return Response(data={'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'POST'])
 def get_user(request):
+    """
+    Retrieves user information based on JWT tokens (access or refresh).
+
+    This view checks for a valid access token in the request body or cookies.
+    If the access token is invalid or missing, it attempts to refresh the session
+    using the refresh token. If successful, new tokens are issued.
+
+    Workflow:
+    - Checks for `access` and `refresh` tokens in request data.
+    - If not found, attempts to retrieve them from cookies.
+    - If the access token is valid, fetches user information.
+    - If the access token is invalid but a refresh token is present,
+      generates new tokens and returns updated credentials.
+    - Returns user data along with new tokens if needed.
+
+    Args:
+        request (Request): The HTTP request containing tokens.
+
+    Returns:
+        Response: JSON response containing user data and optionally new tokens.
+    """
+
     token_is_valid = False
+
+    # Extract access and refresh tokens from request data
     access = request.data.get('access')
     refresh = request.data.get('refresh')
 
     logger.debug(f'Access: {access}')
     logger.debug(f'Refresh: {refresh}')
 
+    # If tokens are missing in the request body, retrieve them from cookies
     if access is None:
         access = request.COOKIES.get('uat')
-        logger.debug(f'Access: {access}')
+        logger.debug(f'Access (from cookies): {access}')
 
     if refresh is None:
         refresh = request.COOKIES.get('urt')
-        logger.debug(f'Refresh: {refresh}')
+        logger.debug(f'Refresh (from cookies): {refresh}')
 
-    uat = None
-    urt = None
+    uat = None  # New access token (if refreshed)
+    urt = None  # New refresh token (if refreshed)
     user = None
 
+    # Validate access token if available
     if access:
         try:
             user_data = AccessToken(access)
             user = get_object_or_404(CustomUserModel, pk=user_data.get('user_id'))
             token_is_valid = True
-
         except TokenError:
-            token_is_valid = False
+            token_is_valid = False  # Access token is invalid
 
+    # If access token is invalid, try using the refresh token
     if not token_is_valid and refresh:
-        user_data = RefreshToken(refresh)
-        user = get_object_or_404(CustomUserModel, pk=user_data.get('user_id'))
-        new_refresh = RefreshToken.for_user(user)
-        uat = str(new_refresh.access_token)
-        urt = str(new_refresh)
+        try:
+            user_data = RefreshToken(refresh)
+            user = get_object_or_404(CustomUserModel, pk=user_data.get('user_id'))
 
+            # Generate new tokens
+            new_refresh = RefreshToken.for_user(user)
+            uat = str(new_refresh.access_token)
+            urt = str(new_refresh)
+        except TokenError:
+            return Response(data={'error': 'Invalid or expired token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # If user is successfully authenticated, return their data
     if user:
         serialized_user = CustomUserSerializer(user, many=False)
         data = {
-            'access': uat,
-            'refresh': urt,
-            'user': serialized_user.data,
+            'access': uat,  # New access token if refreshed
+            'refresh': urt,  # New refresh token if refreshed
+            'user': serialized_user.data,  # User information
         }
+        logger.debug(f'User: {serialized_user.data}')
         return Response(data=data, status=status.HTTP_200_OK)
 
+    # If authentication fails completely, return an error response
+    return Response(data={'error': 'Invalid or expired token'}, status=status.HTTP_401_UNAUTHORIZED)
 
+
+# TODO Remake this view
 @api_view(['GET'])
 def delete_user(request, username):
     user = get_object_or_404(CustomUserModel, username=username)
@@ -184,8 +247,9 @@ def add_draw(request):
 def change_rating(request):
     username = request.data.get('username')
     rating = request.data.get('rating')
+    logger.debug(f'Username: {username}, Rating: {rating}')
     user = get_object_or_404(CustomUserModel, username=username)
-    user.rating += rating
+    user.rating += int(rating)
     user.save(update_fields=['rating'])
     data = {'rating updated': user.id}
     return Response(data=data, status=status.HTTP_200_OK)
@@ -203,7 +267,8 @@ def get_rating(request):
 
 @api_view(['GET'])
 def get_profile(request):
-    username = request.data.get('username')
+    username = request.query_params.get('username')
+    logger.debug(f'Username: {username}')
     user = get_object_or_404(CustomUserModel, username=username)
     serialized_users = CustomUserSerializer(user, many=False)
     data = {
@@ -225,7 +290,9 @@ def create_character(request, user):
     return Response(serialized_character.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# TODO Remake this view
 @api_view(['DELETE'])
+@auth_service
 def delete_character(request, character_name):
     character = get_object_or_404(CharacterModel, name=character_name)
     character.delete()

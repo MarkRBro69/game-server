@@ -1,4 +1,7 @@
 import logging
+import environ
+
+from django.http import JsonResponse
 
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.exceptions import TokenError
@@ -9,6 +12,7 @@ from users_app.serializers import CustomUserSerializer
 
 
 logger = logging.getLogger('game_server')
+env = environ.Env()
 
 
 def get_auth_user(func):
@@ -78,3 +82,18 @@ def get_auth_user(func):
 
         return response
     return wrapper
+
+
+def auth_service(func):
+    def wrapper(*args, **kwargs):
+        request = args[0]
+        headers = request.headers
+        service_key = headers.get('Service-Key')
+
+        if service_key == env.str('USERS_SERVICE_KEY'):
+            return func(*args, **kwargs)
+        else:
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    return wrapper
+

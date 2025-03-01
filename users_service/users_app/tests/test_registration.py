@@ -21,6 +21,7 @@ class UserRegistrationTestCase(APITestCase):
         """
         Test for successful user registration.
         """
+        self.client.cookies.clear()
         data = {
             'username': 'testuser',
             'email': 'test@example.com',
@@ -55,6 +56,7 @@ class UserRegistrationTestCase(APITestCase):
         This test simulates a case where the user provides empty values for required fields,
         and checks if the appropriate validation error messages are returned by the API.
         """
+        self.client.cookies.clear()
         # Data with empty values for all required fields
         data = {
             'username': '',
@@ -96,7 +98,7 @@ class UserRegistrationTestCase(APITestCase):
         when invalid data is provided during registration, appropriate validation
         errors are returned with the correct status code and error messages.
         """
-
+        self.client.cookies.clear()
         # Perform a POST request to the API with registration data (valid case)
         data = {
             'username': 'testuser',
