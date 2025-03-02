@@ -1,6 +1,11 @@
+import logging
 import random
 
 from game_app.game.game import Actions, Character
+
+
+logger = logging.getLogger('game_server')
+
 
 bot_dict = {
     'name': 'Bot',
@@ -56,11 +61,20 @@ class Bot(Character):
             self.actions_dict[Actions.DEFEND] = 0
             self.actions_dict[Actions.FEINT] = 0
 
+        self.get_action()
+        for action in self.actions_dict.keys():
+            if action not in self.available_actions:
+                self.actions_dict[action] = 0
+
         actions_list = []
         for key, value in self.actions_dict.items():
             for i in range(value):
                 actions_list.append(key)
 
+        if len(actions_list) == 0:
+            actions_list.append(Actions.PASS)
+
+        logger.debug(f'Actions list: {actions_list}')
         return random.choice(actions_list)
 
     async def send_start(self, message):

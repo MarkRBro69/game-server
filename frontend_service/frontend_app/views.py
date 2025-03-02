@@ -143,6 +143,7 @@ def profile(request, username):
     if request.method == 'GET':
         url = get_users_get_profile_url()
         method = requests.get
+        url = f'{url}?username={username}'
         data = {'username': username}
         profile_response = try_requests(method, url, data=data)
         context['user'] = profile_response.get('response').json().get('profile')
@@ -168,8 +169,10 @@ def game_lobby(request, room_token, user=None):
         'title': 'Game lobby',
     }
     if request.method == 'GET':
+        # charname = request.query_params.get('charname')
         context['user'] = user
         context['room_token'] = room_token
+        context['charname'] = 'Hannibal10'  # TODO set dynamic parameter
         context['token'] = requests.get(get_game_auth_token_url(), cookies=request.COOKIES).json().get('token')
         logger.debug(f'Token: {context['token']}')
         response = render(request, 'frontend_app/game_lobby.html', context)

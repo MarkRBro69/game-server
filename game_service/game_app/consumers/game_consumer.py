@@ -43,6 +43,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             for char in characters:
                 if char.get('name') == self.character_name:
                     self.character = Character(char)
+                    self.character.OWNER_USERNAME = self.username
                     break
         else:
             return

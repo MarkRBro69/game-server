@@ -83,10 +83,11 @@ class Character:
         self.ready_to_act: bool = False
 
     def set_action(self, action: Actions):
-        logger.debug(f'{self.name} selected: {action}')
-
-        self.current_action = Actions(action)
-        self.ready_to_act = True
+        logger.debug(f'{self.name} selected: {action}, Actions: {Actions(action)}')
+        self.get_action()
+        if Actions(action) in self.available_actions:
+            self.current_action = Actions(action)
+            self.ready_to_act = True
 
     def get_action(self) -> Actions:
         self.last_action = self.current_action
@@ -249,8 +250,8 @@ class Game:
         return game_message
 
     def check_end_condition(self, turn_number: int) -> str:
-        c1_name = self.characters[1].get_name()
-        c2_name = self.characters[2].get_name()
+        c1_name = self.characters[1].OWNER_USERNAME
+        c2_name = self.characters[2].OWNER_USERNAME
 
         if self.characters[1].is_dead and self.characters[2].is_dead:
             UsersManager.add_draw(c1_name)
@@ -262,7 +263,7 @@ class Game:
 
             UsersManager.add_win(c2_name)
             UsersManager.change_rating(c2_name, self.RATING_PER_GAME)
-            return f'{self.characters[2].OWNER_USERNAME} win'
+            return f'{c2_name} win'
 
         if self.characters[2].is_dead:
             UsersManager.add_win(c1_name)
@@ -270,7 +271,7 @@ class Game:
 
             UsersManager.add_loss(c2_name)
             UsersManager.change_rating(c2_name, -self.RATING_PER_GAME)
-            return f'{self.characters[1].OWNER_USERNAME} win'
+            return f'{c1_name} win'
 
         if turn_number == Game.MAX_TURNS - 1:
             UsersManager.add_draw(c1_name)
