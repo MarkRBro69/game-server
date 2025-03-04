@@ -7,7 +7,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
-from users_app.models import CustomUserModel
+from users_app.models import CustomUserModel, CharacterModel
 from users_app.serializers import CustomUserSerializer
 
 
@@ -77,7 +77,7 @@ def get_auth_user(func):
                 max_age=3600 * 24,
                 secure=True,
                 httponly=True,
-                sameite='None',
+                samesite='None',
             )
 
         return response
@@ -97,3 +97,14 @@ def auth_service(func):
 
     return wrapper
 
+
+def calc_experience(character: CharacterModel, experience_to_add: int) -> (int, bool):
+    gain_level = False
+    level = int(character.level)
+    experience = int(character.experience)
+    current_experience = experience + experience_to_add
+    next_level_experience = (level * (level + 1) * 100) / 2
+    if current_experience >= next_level_experience:
+        gain_level = True
+
+    return current_experience, gain_level

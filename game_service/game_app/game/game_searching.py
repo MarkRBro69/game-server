@@ -43,30 +43,26 @@ class GameSearching:
                 await self.restart_loop()
                 return
 
-            await self.check_match()
-            await asyncio.sleep(GameSearching.TIMEOUT)
-
-        GameSearching.LOOP_TASK = None
+            try:
+                await self.check_match()
+                await asyncio.sleep(GameSearching.TIMEOUT)
+            except asyncio.CancelledError:
+                logger.debug("Loop was cancelled.")
+                return
 
     async def restart_loop(self):
         if GameSearching.LOOP_TASK:
             GameSearching.LOOP_TASK.cancel()
-            try:
-                await GameSearching.LOOP_TASK
-            except asyncio.CancelledError:
-                pass
 
-        GameSearching.LOOP_TASK = asyncio.create_task(self.check_loop())
+            GameSearching.LOOP_TASK = asyncio.create_task(self.check_loop())
 
-    @staticmethod
-    async def end_loop():
-        if GameSearching.LOOP_TASK:
-            GameSearching.LOOP_TASK.cancel()
-            try:
-                await GameSearching.LOOP_TASK
-                GameSearching.LOOP_TASK = None
-            except asyncio.CancelledError:
-                pass
+    @classmethod
+    async def end_loop(cls):
+        logger.debug(f'LOOP TASK: {cls.LOOP_TASK}')
+        if cls.LOOP_TASK is not None:
+            cls.LOOP_TASK.cancel()
+
+            cls.LOOP_TASK = None
 
     async def check_match(self):
         searching_users = self.redis.get_all_search()
@@ -74,7 +70,8 @@ class GameSearching:
         logger.debug(f'Checking match, searching players:'
                      f'{searching_users}')
 
-        if not searching_users:
+        if len(searching_users) == 0:
+            logger.debug('Run end_loop')
             await self.end_loop()
 
         match_dict = {}

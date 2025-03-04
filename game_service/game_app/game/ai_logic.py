@@ -14,6 +14,8 @@ bot_dict = {
     'agility': 5,
     'stamina': 5,
     'endurance': 5,
+    'level': 1,
+    'experience': 0,
 }
 
 

@@ -12,7 +12,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 class CharacterSerializer(serializers.ModelSerializer):
     class Meta:
         model = CharacterModel
-        fields = ['name', 'owner', 'char_type', 'strength', 'agility', 'stamina', 'endurance']
+        fields = ['name', 'owner', 'char_type', 'strength', 'agility', 'stamina', 'endurance', 'level', 'experience']
         extra_kwargs = {'owner': {'read_only': True}}
 
     def validate(self, data):

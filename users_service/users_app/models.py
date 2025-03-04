@@ -73,6 +73,8 @@ class CharacterModel(models.Model):
     agility = models.IntegerField(blank=False, null=False)
     stamina = models.IntegerField(blank=False, null=False)
     endurance = models.IntegerField(blank=False, null=False)
+    level = models.IntegerField(blank=False, null=False, default=1)
+    experience = models.IntegerField(blank=False, null=False, default=0)
 
     objects = models.Manager()
 

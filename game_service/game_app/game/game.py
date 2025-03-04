@@ -70,9 +70,12 @@ class Character:
         self.health: int = character.get('endurance') * Character.hp_per_endurance
         self.energy: int = self.MAX_ENERGY
         self.damage: int = character.get('strength') * Character.dmg_per_strength
-        self.epa: int = 100 / character.get('agility')  # Energy per action
+        self.epa: int = 100 // character.get('agility')  # Energy per action
         self.ber: int = character.get('stamina') * Character.be_per_stamina  # Base energy recharge
         self.aer: int = character.get('stamina') * Character.ae_per_stamina  # Active energy recharge
+
+        self.level: int = character.get('level')
+        self.experience: int = character.get('experience')
 
         self.skip_turn: bool = False
         self.is_dead: bool = False
@@ -149,6 +152,7 @@ class Game:
     MAX_TURNS = 100
     TURN_TIME = 30
     RATING_PER_GAME = 25
+    EXP_GAIN = 10
 
     def __init__(self) -> None:
         self.characters: dict[int, Optional[Character]] = {1: None, 2: None}
@@ -159,6 +163,11 @@ class Game:
         self.observers: list = []
 
         self.current_game_task = None
+
+    def calc_experience(self, target_character_level: int, enemy_character_level: int) -> int:
+        exp_coef = enemy_character_level / target_character_level
+        exp_gain = self.EXP_GAIN * exp_coef
+        return int(exp_gain)
 
     async def set_character(self, character: Character) -> None:
         logger.debug(f'PLayer {character.OWNER_USERNAME} connected with: Character {character.get_name()}')
@@ -257,12 +266,17 @@ class Game:
             UsersManager.add_draw(c1_name)
             UsersManager.add_draw(c2_name)
             return 'draw'
+
         if self.characters[1].is_dead:
             UsersManager.add_loss(c1_name)
             UsersManager.change_rating(c1_name, -self.RATING_PER_GAME)
 
             UsersManager.add_win(c2_name)
             UsersManager.change_rating(c2_name, self.RATING_PER_GAME)
+
+            experience_to_gain = self.calc_experience(self.characters[2].level, self.characters[1].level)
+            UsersManager.update_experience(self.characters[2].get_name(), experience_to_gain)
+
             return f'{c2_name} win'
 
         if self.characters[2].is_dead:
@@ -271,6 +285,10 @@ class Game:
 
             UsersManager.add_loss(c2_name)
             UsersManager.change_rating(c2_name, -self.RATING_PER_GAME)
+
+            experience_to_gain = self.calc_experience(self.characters[1].level, self.characters[2].level)
+            UsersManager.update_experience(self.characters[1].get_name(), experience_to_gain)
+
             return f'{c1_name} win'
 
         if turn_number == Game.MAX_TURNS - 1:

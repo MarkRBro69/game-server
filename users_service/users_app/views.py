@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from users_app.models import CustomUserModel, CharacterModel
 from users_app.serializers import CustomUserSerializer, CharacterSerializer
 from users_app.services import UserService, CharacterService
-from users_app.utils import get_auth_user, auth_service
+from users_app.utils import get_auth_user, auth_service, calc_experience
 
 logger = logging.getLogger('game_server')
 
@@ -255,6 +255,24 @@ def change_rating(request):
     return Response(data=data, status=status.HTTP_200_OK)
 
 
+@api_view(['PATCH'])
+def update_char_experience(request):
+    charname = request.data.get('charname')
+    experience = request.data.get('experience')
+    logger.debug(f'Charname: {charname}, Experience: {experience}')
+    character = get_object_or_404(CharacterModel, name=charname)
+
+    new_exp, level_gain = calc_experience(character, int(experience))
+    character.experience = new_exp
+
+    if level_gain:
+        character.level += 1
+
+    character.save(update_fields=['experience', 'level'])
+    data = {'updated_character': character}
+    return Response(data=data, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 def get_rating(request):
     users = CustomUserModel.objects.all().order_by('-rating')
@@ -292,7 +310,7 @@ def create_character(request, user):
 
 # TODO Remake this view
 @api_view(['DELETE'])
-@auth_service
+# @auth_service
 def delete_character(request, character_name):
     character = get_object_or_404(CharacterModel, name=character_name)
     character.delete()

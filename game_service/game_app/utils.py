@@ -14,7 +14,8 @@ from game_service.microservices.users_api import (
     get_users_add_loss_url,
     get_users_add_draw_url,
     get_users_change_rating_url,
-    get_users_get_user_url
+    get_users_get_user_url,
+    get_users_char_experience_url
 )
 
 
@@ -232,6 +233,15 @@ class UsersManager:
         data = {
             'username': username,
             'rating': rating,
+        }
+        requests.patch(url, data=data)
+
+    @staticmethod
+    def update_experience(charname, experience):
+        url = get_users_char_experience_url()
+        data = {
+            'charname': charname,
+            'experience': experience,
         }
         requests.patch(url, data=data)
 

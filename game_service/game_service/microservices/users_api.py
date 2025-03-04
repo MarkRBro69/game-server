@@ -1,3 +1,4 @@
+# from django.conf import settings
 from game_service import settings
 
 env = settings.ENV
@@ -19,6 +20,7 @@ USERS_GET_PROFILE = 'get_profile/'
 USERS_GET_USER = 'get_user/'
 USERS_CREATE_CHARACTER = 'create_character/'
 USERS_GET_USER_CHARACTERS = 'get_user_characters/'
+USERS_UPDATE_CHAR_EXPERIENCE = 'update_char_experience/'
 
 RUNNING = env('RUNNING')
 if RUNNING == 'railway':
@@ -87,3 +89,7 @@ def get_users_create_character_url():
 
 def get_users_user_characters_url():
     return f'{USERS_API}{USERS_GET_USER_CHARACTERS}'
+
+
+def get_users_char_experience_url():
+    return f'{USERS_API}{USERS_UPDATE_CHAR_EXPERIENCE}'

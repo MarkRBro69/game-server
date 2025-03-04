@@ -1,3 +1,4 @@
+# from django.conf import settings
 from game_service import settings
 
 env = settings.ENV
