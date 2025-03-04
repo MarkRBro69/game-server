@@ -1,5 +1,6 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
 from users_app.managers import CustomUserManager
 
@@ -69,12 +70,13 @@ class CharacterModel(models.Model):
         null=False,
     )
     name = models.CharField(max_length=40, blank=False, null=False, db_index=True, unique=True)
-    strength = models.IntegerField(blank=False, null=False)
-    agility = models.IntegerField(blank=False, null=False)
-    stamina = models.IntegerField(blank=False, null=False)
-    endurance = models.IntegerField(blank=False, null=False)
-    level = models.IntegerField(blank=False, null=False, default=1)
-    experience = models.IntegerField(blank=False, null=False, default=0)
+    strength = models.PositiveIntegerField(blank=False, null=False, default=2)
+    agility = models.PositiveIntegerField(blank=False, null=False, default=2)
+    stamina = models.PositiveIntegerField(blank=False, null=False, default=2)
+    endurance = models.PositiveIntegerField(blank=False, null=False, default=2)
+    level = models.PositiveIntegerField(blank=False, null=False, default=1)
+    experience = models.PositiveIntegerField(blank=False, null=False, default=0)
+    unused_points = models.PositiveIntegerField(blank=False, null=False, default=12)
 
     objects = models.Manager()
 

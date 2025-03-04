@@ -23,6 +23,7 @@ urlpatterns = [
     path('get_user_characters/<str:username>/', get_user_characters, name='get_user_characters'),
     path('get_user_char_by_name/<str:char_name>/', get_user_char_by_name, name='get_user_char_by_name'),
     path('update_char_experience/', update_char_experience, name='update_char_experience'),
+    path('add_point/<str:charname>/<str:stat>/', add_point, name='add_point'),
 
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

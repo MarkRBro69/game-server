@@ -267,8 +267,9 @@ def update_char_experience(request):
 
     if level_gain:
         character.level += 1
+        character.unused_points += 5
 
-    character.save(update_fields=['experience', 'level'])
+    character.save(update_fields=['experience', 'level', 'unused_points'])
     data = {'updated_character': character}
     return Response(data=data, status=status.HTTP_200_OK)
 
@@ -297,7 +298,7 @@ def get_profile(request):
 
 @api_view(['POST'])
 @get_auth_user
-def create_character(request, user):
+def create_character(request, user=None):
     serialized_character = CharacterSerializer(data=request.data)
     if serialized_character.is_valid():
         username = user.get('username')
@@ -306,6 +307,33 @@ def create_character(request, user):
         serialized_character.save()
         return Response(serialized_character.data, status=status.HTTP_201_CREATED)
     return Response(serialized_character.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PATCH'])
+@get_auth_user
+def add_point(request, charname, stat, user=None):
+    username = user.get('username')
+    logger.debug(f'Username: {username}')
+    user = get_object_or_404(CustomUserModel, username=username)
+
+    character = CharacterModel.objects.filter(name=charname, owner=user).first()
+
+    if not character:
+        return Response(data={'message': 'Character not found or you do not have permission to modify it.'},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    if character.unused_points == 0:
+        return Response(data={'message': 'Do not have enough points'}, status=status.HTTP_400_BAD_REQUEST)
+
+    stat_to_update = getattr(character, stat)
+    updated_value = stat_to_update + 1
+    setattr(character, stat, updated_value)
+
+    character.unused_points -= 1
+    character.save(update_fields=[stat, 'unused_points'])
+    serialized_character = CharacterSerializer(character)
+
+    return Response(data={'character': serialized_character.data}, status=status.HTTP_200_OK)
 
 
 # TODO Remake this view
