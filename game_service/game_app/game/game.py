@@ -1,58 +1,13 @@
 import asyncio
 import logging
 
-from enum import Enum
 from typing import Optional
 
+from game_app.game.actions import ActionsFactory, Action, Status
 from game_app.utils import UsersManager
 
 
 logger = logging.getLogger('game_server')
-
-
-class Actions(Enum):
-    ATTACK = 'attack'
-    DEFEND = 'defend'
-    FEINT = 'feint'
-    REST = 'rest'
-    PASS = 'pass'
-
-
-class Interactions:
-    MULTIPLY = 2
-
-    INTERACTIONS = {
-        (Actions.ATTACK, Actions.ATTACK): (-1, -1, False, -1, -1, False),
-        (Actions.ATTACK, Actions.DEFEND): (0, -1 * MULTIPLY, True, 0, -1, False),
-        (Actions.ATTACK, Actions.FEINT): (0, -1, False, -1, 0, False),
-        (Actions.ATTACK, Actions.REST): (0, -1, False, -1, 1, False),
-        (Actions.ATTACK, Actions.PASS): (0, -1, False, -1, 0, False),
-
-        (Actions.DEFEND, Actions.DEFEND): (0, 0, False, 0, 0, False),
-        (Actions.DEFEND, Actions.FEINT): (0, -1 * MULTIPLY, True, 0, 0, False),
-        (Actions.DEFEND, Actions.REST): (0, 0, False, 0, 1, False),
-        (Actions.DEFEND, Actions.PASS): (0, 0, False, 0, 0, False),
-
-        (Actions.FEINT, Actions.FEINT): (0, 0, False, 0, 0, False),
-        (Actions.FEINT, Actions.REST): (0, 0, False, 0, 1, False),
-        (Actions.FEINT, Actions.PASS): (0, 0, False, 0, 0, False),
-
-        (Actions.REST, Actions.REST): (0, 1, False, 0, 1, False),
-        (Actions.REST, Actions.PASS): (0, 1, False, 0, 0, False),
-
-        (Actions.PASS, Actions.PASS): (0, 0, False, 0, 0, False),
-    }
-
-    @classmethod
-    def parse_actions(cls, action1, action2):
-        logger.debug(f'action 1: {action1}, action 2: {action2}')
-
-        if (action1, action2) in cls.INTERACTIONS:
-            return cls.INTERACTIONS[(action1, action2)]
-        elif (action2, action1) in cls.INTERACTIONS:
-            return tuple(cls.INTERACTIONS[(action2, action1)][3:] + cls.INTERACTIONS[(action2, action1)][:3])
-        else:
-            raise ValueError('Interaction is not allowed')
 
 
 class Character:
@@ -81,46 +36,49 @@ class Character:
         self.is_dead: bool = False
 
         self.available_actions: set = set()
-        self.current_action: Actions = Actions.PASS
-        self.last_action: Actions = Actions.PASS
+        self.current_action: Action = ActionsFactory.create_action(action_name='pass')
+        self.last_action: Action = ActionsFactory.create_action(action_name='pass')
         self.ready_to_act: bool = False
 
-    def set_action(self, action: Actions):
-        logger.debug(f'{self.name} selected: {action}, Actions: {Actions(action)}')
+    def set_action(self, action: str):
+        logger.debug(f'{self.name} selected: {action}')
         self.get_action()
-        if Actions(action) in self.available_actions:
-            self.current_action = Actions(action)
+        if action in self.available_actions:
+            action_power = 0
+            if action == 'attack':
+                action_power = self.damage
+            elif action == 'rest':
+                action_power = self.aer
+
+            self.current_action = ActionsFactory.create_action(action_name=action,
+                                                               energy_cost=self.epa,
+                                                               action_power=action_power)
             self.ready_to_act = True
 
-    def get_action(self) -> Actions:
+    def get_action(self) -> Action:
         self.last_action = self.current_action
-        self.current_action = Actions.PASS
+        self.current_action = ActionsFactory.create_action(action_name='pass')
         self.ready_to_act = False
         return self.last_action
 
     def get_last_action(self) -> str:
-        return self.last_action.value
+        return self.last_action.action_name
 
     def get_name(self) -> str:
         return self.name
 
-    def change_health(self, amount: int) -> None:
-        self.health += amount
-
+    def apply_status(self, stat: Status) -> None:
+        self.health += stat.status.get('health')
         if self.health <= 0:
             self.is_dead = True
 
-    def change_energy(self, amount: int) -> None:
-        self.energy += amount
-
-        if self.energy > self.MAX_ENERGY:
-            self.energy = self.MAX_ENERGY
-
+        self.energy += stat.status.get('energy')
         if self.energy < 0:
             self.energy = 0
-
-    def change_skip(self, to_skip: bool) -> None:
-        self.skip_turn = to_skip
+        elif self.energy > self.MAX_ENERGY:
+            self.energy = self.MAX_ENERGY
+            
+        self.skip_turn = stat.status.get('skip')
 
     def get_actions(self) -> list:
         self.available_actions = set()
@@ -128,21 +86,20 @@ class Character:
             return []
 
         if self.skip_turn:
-            self.available_actions = {Actions.PASS}
+            self.available_actions = {'pass'}
 
         else:
-            self.available_actions = set(Actions)
-            self.available_actions.remove(Actions.PASS)
+            self.available_actions = set(ActionsFactory.action_classes.keys())
+            self.available_actions.remove('pass')
             if self.energy < self.epa:
-                self.available_actions.remove(Actions.ATTACK)
-                self.available_actions.remove(Actions.DEFEND)
+                self.available_actions.remove('attack')
+                self.available_actions.remove('defence')
 
-        return [action.value for action in self.available_actions]
+        return list(self.available_actions)
 
-    def turn(self, health_amount: int, energy_amount: int, to_skip: bool):
-        self.change_health(health_amount)
-        self.change_energy(energy_amount)
-        self.change_skip(to_skip)
+    def turn(self, stat: Status):
+        self.apply_status(stat)
+        self.energy += self.ber
 
     def get_status(self) -> (int, int, set, bool):
         return self.health, self.energy, self.get_actions(), self.is_dead
@@ -226,34 +183,20 @@ class Game:
 
     def turn(self) -> str:
         for character in self.characters.values():
-            character.change_skip(False)
+            character.skip_turn = False
 
         p1_action = self.characters[1].get_action()
         p2_action = self.characters[2].get_action()
 
-        h1_change, e1_change, p1_skip, h2_change, e2_change, p2_skip = (
-            Interactions.parse_actions(p1_action, p2_action)
-        )
+        status1, status2 = Action.resolve_actions(p1_action, p2_action)
 
-        h1_change *= self.characters[2].damage
-        if e1_change < 0:
-            e1_change = e1_change * self.characters[1].epa + self.characters[1].ber
-        else:
-            e1_change = e1_change * self.characters[1].aer + self.characters[1].ber
-
-        h2_change *= self.characters[1].damage
-        if e2_change < 0:
-            e2_change = e2_change * self.characters[2].epa + self.characters[2].ber
-        else:
-            e2_change = e2_change * self.characters[2].aer + self.characters[2].ber
-
-        self.characters[1].turn(h1_change, e1_change, p1_skip)
-        self.characters[2].turn(h2_change, e2_change, p2_skip)
+        self.characters[1].turn(status1)
+        self.characters[2].turn(status2)
 
         game_message = (
             f'Turn: {self.turn_number}:\n'
-            f'{self.characters[1].get_name()}: {p1_action.value}\n'
-            f'{self.characters[2].get_name()}: {p2_action.value}'
+            f'{self.characters[1].get_name()}: {p1_action.action_name}\n'
+            f'{self.characters[2].get_name()}: {p2_action.action_name}'
         )
 
         return game_message

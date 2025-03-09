@@ -1,7 +1,8 @@
 import logging
 import random
 
-from game_app.game.game import Actions, Character
+from game_app.game.actions import ActionsFactory, Action
+from game_app.game.game import Character
 
 
 logger = logging.getLogger('game_server')
@@ -22,46 +23,36 @@ bot_dict = {
 class Bot(Character):
     def __init__(self):
         super().__init__(bot_dict)
-        self.actions_dict = {
-            Actions.ATTACK: 0,
-            Actions.DEFEND: 0,
-            Actions.FEINT: 0,
-            Actions.REST: 0,
-            Actions.PASS: 0,
-        }
+        actions = ActionsFactory.action_classes.keys()
+        self.actions_dict = {action: 0 for action in actions}
         self.status = None
         self.opponent_status = None
 
     def reset_actions(self):
-        self.actions_dict = {
-            Actions.ATTACK: 1,
-            Actions.DEFEND: 1,
-            Actions.FEINT: 1,
-            Actions.REST: 0,
-            Actions.PASS: 0,
-        }
+        actions = list(ActionsFactory.action_classes.keys())
+        self.actions_dict = {action: (1 if i < 3 else 0) for i, action in enumerate(actions)}
 
-    def make_move(self) -> Actions:
+    def make_move(self) -> Action:
         self.reset_actions()
 
         if self.status[1] < 20:
-            return Actions.REST
+            return ActionsFactory.create_action(action_name='pass')
 
         if self.status[1] < 50:
-            self.actions_dict[Actions.REST] += 1
+            self.actions_dict['rest'] += 1
 
         if self.status[1] > self.opponent_status[1]:
-            self.actions_dict[Actions.ATTACK] += 1
+            self.actions_dict['attack'] += 1
 
         if self.status[0] > self.opponent_status[0]:
-            self.actions_dict[Actions.FEINT] += 1
+            self.actions_dict['feint'] += 1
 
         if self.status[0] < self.opponent_status[0]:
-            self.actions_dict[Actions.DEFEND] += 1
+            self.actions_dict['defence'] += 1
 
         if all(action not in self.opponent_status[2] for action in ('attack', 'defend')):
-            self.actions_dict[Actions.DEFEND] = 0
-            self.actions_dict[Actions.FEINT] = 0
+            self.actions_dict['defence'] = 0
+            self.actions_dict['feint'] = 0
 
         self.get_action()
         for action in self.actions_dict.keys():
@@ -74,7 +65,7 @@ class Bot(Character):
                 actions_list.append(key)
 
         if len(actions_list) == 0:
-            actions_list.append(Actions.PASS)
+            actions_list.append('pass')
 
         logger.debug(f'Actions list: {actions_list}')
         return random.choice(actions_list)

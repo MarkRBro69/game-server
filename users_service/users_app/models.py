@@ -1,6 +1,5 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
-from rest_framework.exceptions import ValidationError
 
 from users_app.managers import CustomUserManager
 

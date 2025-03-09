@@ -112,6 +112,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             'p2_username': message['p2_username'],
             'p2_status': message['p2_status'],
         }
+        logger.debug(f'Message: {message}')
         await self.send(text_data=json.dumps(data))
 
     async def send_turn(self, message):
