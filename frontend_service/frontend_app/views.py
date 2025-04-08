@@ -174,7 +174,7 @@ def game_lobby(request, room_token, user=None):
         context['room_token'] = room_token
         context['charname'] = 'Hannibal10'  # TODO set dynamic parameter
         context['token'] = requests.get(get_game_auth_token_url(), cookies=request.COOKIES).json().get('token')
-        logger.debug(f'Token: {context['token']}')
+        logger.debug(f'Token: {context["token"]}')
         response = render(request, 'frontend_app/game_lobby.html', context)
         return response
 
