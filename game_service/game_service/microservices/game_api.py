@@ -52,7 +52,7 @@ else:
 
     GAME_WS = ''.join([
         GAME_SERVICE_WS_PROTOCOL,
-        GAME_SERVICE_HOST,
+        '127.0.0.3',
         ':',
         GAME_SERVICE_PORT,
         '/',

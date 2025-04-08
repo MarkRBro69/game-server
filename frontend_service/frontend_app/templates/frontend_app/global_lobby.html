@@ -29,7 +29,7 @@
 
 <script>
     const username = '{{ user.username|escapejs }}';
-    const global_url = "{{ global_url|escapejs }}";
+    const global_url = '{{ global_url|escapejs }}';
     const chatSocket = new WebSocket(`${global_url}${username}/`);
 
     chatSocket.onmessage = function(e) {

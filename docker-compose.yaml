@@ -13,6 +13,8 @@ services:
     depends_on:
       - db
       - redis
+    networks:
+      - game_network
 
   users:
     build:
@@ -28,6 +30,8 @@ services:
     depends_on:
       - db
       - redis
+    networks:
+      - game_network
 
   game:
     build:
@@ -43,6 +47,8 @@ services:
     depends_on:
       - db
       - redis
+    networks:
+      - game_network
 
   db:
     image: postgres:latest
@@ -54,11 +60,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - game_network
 
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
+    networks:
+      - game_network
 
 volumes:
   postgres_data:
+
+networks:
+  game_network:
+    driver: bridge
